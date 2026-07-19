@@ -1,0 +1,62 @@
+╔══════════════════════════════════════════════════════════════╗
+║   قواعد أمان Firestore — كتالوج جريفن أفريقيا                 ║
+║   انسخها كاملة والصقها في: Firebase Console ← Firestore ←     ║
+║   تبويب "Rules" ← امسح القديم ← الصق ← Publish                ║
+╚══════════════════════════════════════════════════════════════╝
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── هوية المدير ──
+    // بعد أول دخول لك، ضع معرّف حسابك (UID) هنا بين علامتي التنصيص.
+    // تجده في: Firebase Console ← Authentication ← Users ← انسخ User UID
+    function isOwner() {
+      return request.auth != null
+        && request.auth.uid == 'ضع_UID_حسابك_هنا';
+    }
+
+    // ── الكتالوج الحيّ (أسعار/عروض/صور/إعدادات) ──
+    // يقرأه الجميع (عملاؤك) — يكتبه المدير فقط
+    match /catalog/{doc} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // ── الطلبات ──
+    // ينشئها أي زائر (مسجّل دخول مجهول) — يقرأها/يعدّلها المدير فقط
+    match /orders/{orderId} {
+      allow create: if request.auth != null
+        && request.resource.data.num is string
+        && request.resource.data.total is number;
+      allow read, update, delete: if isOwner();
+    }
+
+    // ── تسجيلات العملاء ──
+    // ينشئها/يحدّثها أي زائر — يقرأها المدير فقط
+    match /customers/{phone} {
+      allow create, update: if request.auth != null
+        && request.resource.data.name is string
+        && request.resource.data.phone is string;
+      allow read, delete: if isOwner();
+    }
+  }
+}
+
+────────────────────────────────────────────────────────────────
+⚠️ مهم جداً — خطوتان بعد اللصق:
+
+1) قبل أول دخول لك، ضع مؤقتاً السطر التالي بدل دالة isOwner
+   لتتمكن من الدخول والنشر أول مرة (وضع مؤقت مفتوح):
+
+   function isOwner() { return request.auth != null; }
+
+2) بعد أن تسجّل دخولك من الكتالوج (☰ ← لوحة المدير ← الإعدادات ←
+   تسجيل دخول المدير)، اذهب إلى Authentication ← Users ← انسخ
+   User UID الخاص بك ← ارجع للقواعد ← ضعه في الدالة الأصلية أعلاه
+   ← Publish. بهذا تُغلق الكتابة على أي أحد سواك.
+
+────────────────────────────────────────────────────────────────
+📌 تذكير: أنشئ حساب المدير أولاً في:
+   Firebase Console ← Authentication ← Users ← Add user
+   (بريد إلكتروني + كلمة مرور من اختيارك — هذه بيانات دخولك للمزامنة)
