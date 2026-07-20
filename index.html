@@ -268,6 +268,10 @@ main{max-width:1000px;margin:0 auto;padding:20px 16px}
 .p-badge .b-offer{background:linear-gradient(135deg,#E0492F,#C0392B)}
 .p-badge .b-new{background:linear-gradient(135deg,#1EA952,#178544)}
 .p-badge .b-low{background:linear-gradient(135deg,#E09A2A,#C77A1A)}
+.p-badge .b-out{background:linear-gradient(135deg,#6b7785,#4a545f)}
+.card.is-out .card-media img{filter:grayscale(.85) opacity(.65)}
+.card.is-out .add-btn{background:#e5e9ed!important;color:#8a95a0!important;cursor:not-allowed}
+.card.is-out .price-block,.card.is-out .qty{opacity:.6}
 @media(min-width:560px){.brands-grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:820px){.brands-grid{grid-template-columns:repeat(4,1fr)}}
 .brand-tile{
@@ -867,6 +871,23 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 <div id="quote-print" dir="rtl"></div>
 <div id="cust-print" dir="rtl"></div>
 
+<!-- ══════════ بوابة بيانات العميل (إلزامية قبل الطلب/عرض السعر) ══════════ -->
+<div class="backdrop" id="gateBackdrop" onclick="closeGate()"></div>
+<div class="sheet" id="gateSheet" style="max-height:auto">
+  <div class="grip"></div>
+  <div class="sheet-head"><h2 data-i18n="gateTitle">بياناتك لإتمام الطلب</h2><button class="close" onclick="closeGate()">✕</button></div>
+  <div class="sheet-body" style="padding:16px 18px">
+    <p style="font-size:12.5px;color:var(--silver);line-height:1.7;margin-bottom:14px" data-i18n="gateIntro">أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.</p>
+    <div class="field"><label data-i18n="custName">الاسم الكامل *</label><input class="inp" id="gateName" placeholder="—"></div>
+    <div class="field"><label data-i18n="custPhone">رقم الهاتف *</label><input class="inp" id="gatePhone" type="tel" inputmode="tel" placeholder="—"></div>
+    <div class="field"><label data-i18n="gateShop">اسم المحل (اختياري)</label><input class="inp" id="gateShop" placeholder="—"></div>
+    <div class="field"><label data-i18n="gateLoc">المنطقة / الشارع (اختياري)</label><input class="inp" id="gateLoc" placeholder="—"></div>
+  </div>
+  <div class="sheet-foot" style="background:var(--card);border-top:1px solid var(--line)">
+    <button class="btn btn-primary" onclick="submitGate()">✓ <span data-i18n="gateContinue">متابعة</span></button>
+  </div>
+</div>
+
 <script>
 "use strict";
 /* ══════════════════════════════════════════════════════════
@@ -915,19 +936,21 @@ const FB = (()=>{
     appId: "1:435260009957:web:5a932cdfa21593e1de130c"
   };
   let db=null, auth=null, ready=false, ownerUid=null;
+  let _authResolve; const authReady=new Promise(r=>{_authResolve=r;});
   // المفاتيح التي تُنشر سحابياً كـ"كتالوج حيّ" (يكتبها المدير، يقرأها الجميع)
   const CATALOG_KEYS=["config","brandOverrides","brandsAdded","brandsHidden",
-    "prodOverrides","prodsAdded","prodsHidden","flagsOffer","flagsNew","flagsLow"];
+    "prodOverrides","prodsAdded","prodsHidden","flagsOffer","flagsNew","flagsLow","flagsOut"];
   function init(){
     try{
       if(!window.firebase||!firebase.initializeApp) return false;
       firebase.initializeApp(cfg);
       db=firebase.firestore(); auth=firebase.auth();
       ready=true;
-      // دخول مجهول للعملaء (يتيح إرسال الطلبات بأمان)، ما لم يكن المدير مسجّلاً
+      // دخول مجهول للعملاء (يتيح إرسال الطلبات بأمان)، ما لم يكن المدير مسجّلاً
       auth.onAuthStateChanged(u=>{
         window._fbUser=u;
-        if(!u){ auth.signInAnonymously().catch(()=>{}); }
+        if(u){ _authResolve(u); }              // المصادقة جاهزة → يمكن الإرسال
+        else{ auth.signInAnonymously().catch(()=>{}); }
       });
       return true;
     }catch(e){ console.warn("Firebase init failed",e); return false; }
@@ -935,6 +958,7 @@ const FB = (()=>{
   return {
     get ready(){ return ready; },
     get db(){ return db; }, get auth(){ return auth; },
+    get authReady(){ return authReady; },
     CATALOG_KEYS, init,
     isOwner(){ return !!(auth&&auth.currentUser&&!auth.currentUser.isAnonymous); },
   };
@@ -973,14 +997,18 @@ async function cloudPullCatalog(){
 /* — إرسال طلب للسجل المركزي — */
 async function cloudPushOrder(order){
   if(!FB.ready) return;
-  try{ await FB.db.collection("orders").doc(order.num).set(Object.assign({},order,{_ts:Date.now()})); }
-  catch(e){ console.warn("order push failed",e); }
+  try{
+    await FB.authReady;                         // انتظر اكتمال الدخول (يمنع الرفض)
+    await FB.db.collection("orders").doc(order.num).set(Object.assign({},order,{_ts:Date.now()}));
+  }catch(e){ console.warn("order push failed",e); }
 }
 /* — إرسال تسجيل عميل للسجل المركزي — */
 async function cloudPushCustomer(c){
   if(!FB.ready||!c||!c.phone) return;
-  try{ await FB.db.collection("customers").doc(waNum(c.phone)).set(Object.assign({},c,{_ts:Date.now()}),{merge:true}); }
-  catch(e){ console.warn("customer push failed",e); }
+  try{
+    await FB.authReady;
+    await FB.db.collection("customers").doc(waNum(c.phone)).set(Object.assign({},c,{_ts:Date.now()}),{merge:true});
+  }catch(e){ console.warn("customer push failed",e); }
 }
 
 /* — نشر مؤجل (يجمّع تعديلات المدير المتتالية) — */
@@ -1007,7 +1035,9 @@ async function fbLogin(email,pass){
   if(!FB.ready) return {ok:false,msg:lang==="ar"?"السحابة غير متصلة":"Cloud offline"};
   try{
     await FB.auth.signInWithEmailAndPassword(email,pass);
+    await cloudPullOwnerPin();   // زامن رمزك عبر الأجهزة
     await cloudPublish();
+    cloudListenOwner();          // ابدأ استقبال الطلبات فوراً
     return {ok:true};
   }catch(e){ return {ok:false,msg:e.message}; }
 }
@@ -1025,6 +1055,30 @@ function cloudListen(){
       loadData(); applyLang();
     }
   },err=>console.warn("listen err",err));
+}
+
+/* — استماع لحظي للطلبات والعملاء (للمالك فقط): تصل تلقائياً بلا "سحب" — */
+let _ordersListening=false;
+function cloudListenOwner(){
+  if(!FB.ready||!FB.isOwner()||_ordersListening) return;
+  _ordersListening=true;
+  // الطلبات
+  FB.db.collection("orders").orderBy("_ts","desc").limit(300).onSnapshot(snap=>{
+    const local=DB.get("orders",[]); const seen=new Set(local.map(o=>o.num)); let added=0;
+    snap.forEach(doc=>{ const o=doc.data(); if(!seen.has(o.num)){ local.push(o); seen.add(o.num); added++; } });
+    if(added){
+      local.sort((a,b)=>(a._ts||0)-(b._ts||0));
+      DB.set("orders",local.slice(-300));
+      if(currentView==="admin"&&adminTab==="orders") renderAdminBody();
+      toast(lang==="ar"?`📥 وصلك ${added} طلب جديد`:`📥 ${added} new order(s)`,"ok");
+    }
+  },err=>console.warn("orders listen",err));
+  // العملاء
+  FB.db.collection("customers").orderBy("_ts","desc").limit(500).onSnapshot(snap=>{
+    const dir=DB.get("customerDir",[]); const ph=new Set(dir.map(c=>waNum(c.phone))); let added=0;
+    snap.forEach(doc=>{ const c=doc.data(); if(!ph.has(waNum(c.phone))){ dir.push(c); ph.add(waNum(c.phone)); added++; } });
+    if(added){ DB.set("customerDir",dir); if(currentView==="admin"&&adminTab==="customers") renderAdminBody(); }
+  },err=>console.warn("customers listen",err));
 }
 
 
@@ -1079,7 +1133,7 @@ const BRAND_LOGO_DEFAULT = {
   saudia:"img/l_saudia.webp", toren:"img/l_toren.webp", truda:"img/l_truda.webp",
   nabil:"img/l_nabil.webp", bestchoice:"img/bestchoice.webp", jordina:"img/l_jordina.webp", vista:"img/l_vista.webp",
   dukes:"img/l_dukes.webp",
-  fave:"img/l_fave.webp", happ:"img/l_happ.webp",
+  fave:"img/l_fave.webp",
   glite:"img/l_glite.webp",
   wazir:"img/l_wazir.webp",
 };
@@ -1097,7 +1151,6 @@ const BRANDS_DEFAULT = [
   { id:"vista", cat:"food",      name:{ar:"فيستا",      fr:"Vista",       en:"Vista"},      logo:BRAND_LOGO_DEFAULT.vista,      origin:{ar:"الهند",        fr:"Inde",      en:"India"} },
   { id:"dukes", cat:"food",      name:{ar:"ديوكس",      fr:"Dukes",       en:"Dukes"},      logo:BRAND_LOGO_DEFAULT.dukes,      origin:{ar:"الهند",        fr:"Inde",      en:"India"} },
   { id:"fave", cat:"food",       name:{ar:"فيف",        fr:"FAVE",        en:"FAVE"},       logo:BRAND_LOGO_DEFAULT.fave,       origin:{ar:"الهند",        fr:"Inde",      en:"India"} },
-  { id:"happ", cat:"food",       name:{ar:"هاب",        fr:"happ!",       en:"happ!"},      logo:BRAND_LOGO_DEFAULT.happ,       origin:{ar:"الهند",        fr:"Inde",      en:"India"} },
   { id:"glite", cat:"light",      name:{ar:"جي لايت",    fr:"GLite",       en:"GLite"},      logo:BRAND_LOGO_DEFAULT.glite,      origin:{ar:"إضاءة LED",    fr:"LED",       en:"LED"} },
   { id:"wazir", cat:"clean",      name:{ar:"الوزير",     fr:"Al Wazir",    en:"Al Wazir"},   logo:BRAND_LOGO_DEFAULT.wazir,      origin:{ar:"منظفات",       fr:"Détergents",en:"Cleaning"} },
 ];
@@ -1146,9 +1199,9 @@ const PRODUCTS_DEFAULT = [
   P("fa2","fave",IMG.fave_vanilla,"فيف فن مانش ويفر بكريمة الفانيليا","FAVE funmunch gaufrettes crème vanille","FAVE Funmunch Vanilla Cream Wafers","",150,125,""),
   P("fa3","fave",IMG.fave_straw,"فيف فن مانش ويفر بكريمة الفراولة","FAVE funmunch gaufrettes crème fraise","FAVE Funmunch Strawberry Cream Wafers","",150,125,""),
   /* ─── هاب happ! ─── */
-  P("ha1","happ",IMG.happ_eclair,"هاب إكلير شوكولاتة حليب مغلّفة بالكراميل","happ! Eclair chocolat au lait & caramel","happ! Eclair Milk Chocolate in Caramel","125 حبة",1200,1050,""),
-  P("ha2","happ",IMG.happ_toffee,"هاب طوفي بطعم الزبدة والكراميل","happ! Butter Toffees caramel","happ! Butter Toffees Caramel","150 حبة",1200,1050,""),
-  P("ha3","happ",IMG.happ_mintz,"هاب مينتز حلوى النعناع المنعشة","happ! Mintz bonbons à la menthe","happ! Mintz Refreshing Mint Candy","125 حبة",1000,880,""),
+  P("ha1","fave",IMG.happ_eclair,"هاب إكلير شوكولاتة حليب مغلّفة بالكراميل","happ! Eclair chocolat au lait & caramel","happ! Eclair Milk Chocolate in Caramel","125 حبة",1200,1050,""),
+  P("ha2","fave",IMG.happ_toffee,"هاب طوفي بطعم الزبدة والكراميل","happ! Butter Toffees caramel","happ! Butter Toffees Caramel","150 حبة",1200,1050,""),
+  P("ha3","fave",IMG.happ_mintz,"هاب مينتز حلوى النعناع المنعشة","happ! Mintz bonbons à la menthe","happ! Mintz Refreshing Mint Candy","125 حبة",1000,880,""),
   /* ─── جي لايت GLite (لمبات LED — قاعدة E27، أبيض نهاري) ─── */
   P("gl1","glite",IMG.glite_5,"جي لايت لمبة LED 5 واط — قاعدة E27","GLite ampoule LED 5W — culot E27","GLite LED Bulb 5W — E27 Base","5 واط",350,300,""),
   P("gl2","glite",IMG.glite_10,"جي لايت لمبة LED 10 واط — قاعدة E27","GLite ampoule LED 10W — culot E27","GLite LED Bulb 10W — E27 Base","10 واط",450,400,""),
@@ -1175,12 +1228,13 @@ const PRODUCTS_DEFAULT = [
 /* ══════════════════════════════════════════════════════════
    دمج البيانات: الافتراضي + تعديلات المدير المخزّنة
    ══════════════════════════════════════════════════════════ */
-let BRANDS = [], PRODUCTS = [], PRODUCTS_ALL = [], FLAGS = {offer:[],new:[],low:[]};
+let BRANDS = [], PRODUCTS = [], PRODUCTS_ALL = [], FLAGS = {offer:[],new:[],low:[],out:[]};
 /* المجموعات الافتراضية (يمكن للمدير تعديلها) — معرّفات أصناف */
 const FLAGS_DEFAULT = {
   offer: ["to1","na5","wz5","du2","fa1","jo2"],
   new:   ["gl1","gl2","gl3","gl4","gl5","gl6","wz1","wz2","wo1","wo4","du3"],
   low:   ["sa1","vi1","to4","bc1","ha2"],
+  out:   [],
 };
 function loadData(){
   const bOver = DB.get("brandOverrides",{});
@@ -1202,11 +1256,12 @@ function loadData(){
     offer:(DB.get("flagsOffer",FLAGS_DEFAULT.offer)||[]).filter(x=>ids.has(x)),
     new:  (DB.get("flagsNew",  FLAGS_DEFAULT.new)  ||[]).filter(x=>ids.has(x)),
     low:  (DB.get("flagsLow",  FLAGS_DEFAULT.low)  ||[]).filter(x=>ids.has(x)),
+    out:  (DB.get("flagsOut",  FLAGS_DEFAULT.out)  ||[]).filter(x=>ids.has(x)),
   };
 }
 function hasFlag(id,f){ return FLAGS[f] && FLAGS[f].includes(id); }
 function toggleFlag(id,f,on){
-  const key={offer:"flagsOffer",new:"flagsNew",low:"flagsLow"}[f];
+  const key={offer:"flagsOffer",new:"flagsNew",low:"flagsLow",out:"flagsOut"}[f];
   let arr=DB.get(key, FLAGS_DEFAULT[f]).slice();
   if(on){ if(!arr.includes(id))arr.push(id); } else { arr=arr.filter(x=>x!==id); }
   DB.set(key,arr); loadData(); schedulePublish();
@@ -1222,6 +1277,7 @@ const I18N = {
     ourBrands:"علاماتنا التجارية", ourBrandsSub:"اختر علامة لعرض أصنافها بأسعار الجملة والتجزئة.",
     svcEyebrow:"نحن في خدمتك", svcTitle:"خدمات العملاء",
     compatT:"لأفضل تجربة وللطلب بسهولة، افتح الرابط في متصفح Chrome", compatOpen:"افتح في Chrome",
+    gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة",
     menuTitle:"القائمة", mAbout:"من نحن", mWhy:"لماذا جريفن؟", mSvc:"خدمات العملاء", mBrands:"العلامات والأصناف",
     mCust:"تسجيل / بياناتي", mCall:"اتصل بنا", mChannel:"قناة العروض", mAdmin:"لوحة المدير",
     whyEyebrow:"شريكك الموثوق في جيبوتي", whyTitle:"لماذا جريفن أفريقيا؟",
@@ -1230,13 +1286,13 @@ const I18N = {
     why3:"توصيل سريع داخل جيبوتي", why3d:"طلبك يصل محلك — بضاعة مفحوصة وتسليم في الموعد",
     why4:"جودة مضمونة وصلاحية طويلة", why4d:"شحنات حديثة الإنتاج ومخزّنة بمعايير سليمة",
     svcOrder:"اطلب عبر واتساب", svcOrderD:"تواصل مباشر وسريع",
-    svcDeliver:"تصفّح العلامات", svcDeliverD:"12 علامة عالمية",
+    svcDeliver:"تصفّح العلامات", svcDeliverD:"11 علامة عالمية",
     svcQuote:"عرض سعر فوري", svcQuoteD:"من سلة طلبك",
     svcChannel:"قناة العروض", svcChannelD:"تابع جديدنا",
     offersTitle:"العروض الحالية", offersSub:"أسعار مميزة لفترة محدودة",
     newTitle:"وصل حديثاً", newSub:"أحدث ما أضفناه للكتالوج",
     lowTitle:"على وشك النفاد", lowSub:"سارع بالطلب قبل نفادها",
-    badgeOffer:"عرض", badgeNew:"جديد", badgeLow:"محدود",
+    badgeOffer:"عرض", badgeNew:"جديد", badgeLow:"محدود", badgeOut:"غير متوفر",
     aboutTitle:"جريفن أفريقيا",
     aboutText:"شركة استيراد وتوزيع بالجملة مقرها جيبوتي، نمثّل نخبة من العلامات العالمية ونوصلها إلى تجار الجملة والتجزئة في المنطقة بجودة موثوقة وأسعار تنافسية.",
     statBrands:"علامة", statProducts:"صنف", statOrigins:"دولة منشأ",
@@ -1264,6 +1320,7 @@ const I18N = {
     ourBrands:"Nos marques", ourBrandsSub:"Choisissez une marque pour voir ses produits en prix gros et détail.",
     svcEyebrow:"À votre service", svcTitle:"Services client",
     compatT:"Pour une meilleure expérience et pour commander, ouvrez le lien dans Chrome", compatOpen:"Ouvrir dans Chrome",
+    gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer",
     menuTitle:"Menu", mAbout:"Qui sommes-nous", mWhy:"Pourquoi Griffin ?", mSvc:"Services client", mBrands:"Marques & produits",
     mCust:"Mon compte", mCall:"Appelez-nous", mChannel:"Chaîne des offres", mAdmin:"Administration",
     whyEyebrow:"Votre partenaire de confiance à Djibouti", whyTitle:"Pourquoi Griffin Africa ?",
@@ -1272,13 +1329,13 @@ const I18N = {
     why3:"Livraison rapide à Djibouti", why3d:"Votre commande arrive à votre magasin, contrôlée et à l'heure",
     why4:"Qualité garantie, longue validité", why4d:"Lots récents, stockés selon les normes",
     svcOrder:"Commander via WhatsApp", svcOrderD:"Contact direct et rapide",
-    svcDeliver:"Parcourir les marques", svcDeliverD:"12 marques internationales",
+    svcDeliver:"Parcourir les marques", svcDeliverD:"11 marques internationales",
     svcQuote:"Devis instantané", svcQuoteD:"depuis votre panier",
     svcChannel:"Chaîne des offres", svcChannelD:"Suivez nos nouveautés",
     offersTitle:"Offres en cours", offersSub:"Prix spéciaux, durée limitée",
     newTitle:"Nouveautés", newSub:"Derniers ajouts au catalogue",
     lowTitle:"Bientôt épuisé", lowSub:"Commandez avant rupture",
-    badgeOffer:"Promo", badgeNew:"Nouveau", badgeLow:"Limité",
+    badgeOffer:"Promo", badgeNew:"Nouveau", badgeLow:"Limité", badgeOut:"Épuisé",
     aboutTitle:"Griffin Africa",
     aboutText:"Société d'import et de distribution en gros basée à Djibouti. Nous représentons une sélection de marques internationales et les livrons aux grossistes et détaillants de la région, avec une qualité fiable et des prix compétitifs.",
     statBrands:"marques", statProducts:"produits", statOrigins:"pays d'origine",
@@ -1306,6 +1363,7 @@ const I18N = {
     ourBrands:"Our Brands", ourBrandsSub:"Pick a brand to see its products at wholesale and retail prices.",
     svcEyebrow:"At your service", svcTitle:"Customer Services",
     compatT:"For the best experience and to order, open this link in Chrome", compatOpen:"Open in Chrome",
+    gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue",
     menuTitle:"Menu", mAbout:"About us", mWhy:"Why Griffin?", mSvc:"Customer services", mBrands:"Brands & products",
     mCust:"My account", mCall:"Call us", mChannel:"Offers channel", mAdmin:"Admin",
     whyEyebrow:"Your trusted partner in Djibouti", whyTitle:"Why Griffin Africa?",
@@ -1314,13 +1372,13 @@ const I18N = {
     why3:"Fast delivery in Djibouti", why3d:"Your order reaches your shop — checked and on time",
     why4:"Guaranteed quality & freshness", why4d:"Recent production lots, stored to standard",
     svcOrder:"Order via WhatsApp", svcOrderD:"Direct & fast contact",
-    svcDeliver:"Browse brands", svcDeliverD:"12 international brands",
+    svcDeliver:"Browse brands", svcDeliverD:"11 international brands",
     svcQuote:"Instant quote", svcQuoteD:"from your cart",
     svcChannel:"Offers channel", svcChannelD:"Follow our latest",
     offersTitle:"Current Offers", offersSub:"Special prices, limited time",
     newTitle:"New Arrivals", newSub:"Latest additions to the catalogue",
     lowTitle:"Almost Out of Stock", lowSub:"Order before they run out",
-    badgeOffer:"Offer", badgeNew:"New", badgeLow:"Low",
+    badgeOffer:"Offer", badgeNew:"New", badgeLow:"Low", badgeOut:"Out of stock",
     aboutTitle:"Griffin Africa",
     aboutText:"A Djibouti-based import and wholesale distribution company. We represent a curated set of international brands and deliver them to wholesalers and retailers across the region with reliable quality and competitive pricing.",
     statBrands:"brands", statProducts:"products", statOrigins:"origin countries",
@@ -1502,11 +1560,13 @@ function productCard(p){
   const tier=inCart?inCart.tier:"retail";
   const qty=inCart?inCart.qty:1;
   const packTxt=nm(p.pack);
+  const isOut=hasFlag(p.id,"out");
   const badges=[];
+  if(isOut)                 badges.push(`<span class="b-out">⛔ ${T().badgeOut}</span>`);
   if(hasFlag(p.id,"offer")) badges.push(`<span class="b-offer">🔥 ${T().badgeOffer}</span>`);
   if(hasFlag(p.id,"new"))   badges.push(`<span class="b-new">🆕 ${T().badgeNew}</span>`);
   if(hasFlag(p.id,"low"))   badges.push(`<span class="b-low">⚠️ ${T().badgeLow}</span>`);
-  return `<div class="card" id="card-${p.id}">
+  return `<div class="card ${isOut?'is-out':''}" id="card-${p.id}">
     <div class="card-media">
       ${b?`<div class="brand-ribbon"><img src="${b.logo}" alt=""><span>${esc(nm(b.name))}</span></div>`:""}
       ${badges.length?`<div class="p-badge">${badges.join("")}</div>`:""}
@@ -1535,8 +1595,8 @@ function productCard(p){
           <input type="number" min="1" id="qty-${p.id}" value="${qty}" onchange="qtyInput('${p.id}',this.value)">
           <button onclick="stepQty('${p.id}',1)">+</button>
         </div>
-        <button class="add-btn ${inCart?'added':''}" id="add-${p.id}" onclick="addToCart('${p.id}')">
-          ${inCart?"✓ "+t.added:"🛒 "+t.add}
+        <button class="add-btn ${inCart?'added':''}" id="add-${p.id}" onclick="addToCart('${p.id}')" ${isOut?'disabled':''}>
+          ${isOut?"⛔ "+t.badgeOut:(inCart?"✓ "+t.added:"🛒 "+t.add)}
         </button>
       </div>
     </div>
@@ -1626,6 +1686,7 @@ function tierOnCard(id){ const c=document.getElementById("card-"+id); return c&&
 function paintTier(id,tier){ const opts=document.getElementById("card-"+id); if(!opts)return; const o=opts.querySelectorAll(".price-opt"); o[0].classList.toggle("active",tier==="retail"); o[1].classList.toggle("active",tier==="wholesale"); }
 function setTier(id,tier){ paintTier(id,tier); if(cart[id]){cart[id].tier=tier;cart[id].manual=true;persistCart();renderCart();} }
 function addToCart(id){
+  if(hasFlag(id,"out")){ toast(lang==="ar"?"هذا الصنف غير متوفر حالياً":"Currently unavailable","err"); return; }
   cart[id]={qty:currentQty(id),tier:tierOnCard(id),manual:cart[id]&&cart[id].manual||false};
   persistCart();
   const btn=document.getElementById("add-"+id); if(btn){btn.classList.add("added");btn.innerHTML="✓ "+T().added;}
@@ -1797,10 +1858,14 @@ function clearCustomer(){
 function printContainer(id){
   const el=document.getElementById(id);
   el.classList.add("print-show");
-  const clean=()=>{ el.classList.remove("print-show"); window.removeEventListener("afterprint",clean); };
+  let done=false;
+  const clean=()=>{ if(done)return; done=true; el.classList.remove("print-show");
+    window.removeEventListener("afterprint",clean); window.removeEventListener("focus",onFocus); };
+  const onFocus=()=>setTimeout(clean,400);   // عند العودة من حوار الحفظ/الطباعة
   window.addEventListener("afterprint",clean);
-  window.print();
-  setTimeout(clean,1500); /* احتياط إن لم يُطلق afterprint */
+  window.addEventListener("focus",onFocus);
+  setTimeout(()=>window.print(),120);        // امهل المتصفح ليرسم المحتوى أولاً
+  setTimeout(clean,60000);                    // أمان بعيد جداً (لا يُفرّغ الـPDF)
 }
 function exportCustomerCard(){
   const c=readCustomerForm();
@@ -1874,14 +1939,54 @@ function saveOrder(num){
 }
 function sendWhatsApp(){
   if(!Object.keys(cart).length)return;
-  bumpStat("orders");
-  const num=nextOrderNum();
-  saveOrder(num);
-  const head=(lang==="ar"?"🧾 طلب رقم: ":lang==="fr"?"🧾 Commande N°: ":"🧾 Order No: ")+num+"\n";
-  window.open(`https://wa.me/${waNum(CONFIG.whatsappNumber)}?text=${encodeURIComponent(head+orderLines())}`,"_blank");
+  requireCustomer(()=>{
+    bumpStat("orders");
+    const num=nextOrderNum();
+    saveOrder(num);
+    const head=(lang==="ar"?"🧾 طلب رقم: ":lang==="fr"?"🧾 Commande N°: ":"🧾 Order No: ")+num+"\n";
+    window.open(`https://wa.me/${waNum(CONFIG.whatsappNumber)}?text=${encodeURIComponent(head+orderLines())}`,"_blank");
+  });
+}
+/* بوابة إلزامية: اسم + هاتف قبل الطلب/عرض السعر (تقليل الطلبات الزائفة) */
+let _gateAction=null;
+function requireCustomer(action){
+  const c=getCustomer();
+  if(c&&c.name&&c.phone){ action(); return; }
+  _gateAction=action;
+  const cc=c||{};
+  document.getElementById("gateName").value=cc.name||"";
+  document.getElementById("gatePhone").value=cc.phone||"";
+  document.getElementById("gateShop").value=cc.shop||"";
+  document.getElementById("gateLoc").value=cc.location||"";
+  document.getElementById("gateBackdrop").classList.add("open");
+  document.getElementById("gateSheet").classList.add("open");
+}
+function closeGate(){ document.getElementById("gateBackdrop").classList.remove("open"); document.getElementById("gateSheet").classList.remove("open"); _gateAction=null; }
+function submitGate(){
+  const name=document.getElementById("gateName").value.trim();
+  const phone=document.getElementById("gatePhone").value.trim();
+  if(!name||!phone){ toast(lang==="ar"?"الاسم والهاتف مطلوبان":"Name & phone required","err"); return; }
+  const prev=getCustomer()||{};
+  const c=Object.assign({},prev,{name,phone,
+    shop:document.getElementById("gateShop").value.trim(),
+    location:document.getElementById("gateLoc").value.trim(), ts:Date.now()});
+  DB.set("customer",c);
+  // أضِفه لدليل العملاء وادفعه للسحابة
+  const dir=DB.get("customerDir",[]); const i=dir.findIndex(x=>waNum(x.phone)===waNum(phone));
+  if(i>=0) dir[i]=Object.assign({},dir[i],c); else dir.push(c);
+  DB.set("customerDir",dir); cloudPushCustomer(c); renderCustBadge();
+  const action=_gateAction;
+  document.getElementById("gateBackdrop").classList.remove("open");
+  document.getElementById("gateSheet").classList.remove("open");
+  _gateAction=null;
+  if(action) action();
 }
 
 function printQuote(){
+  const entries=Object.entries(cart); if(!entries.length)return;
+  requireCustomer(_doPrintQuote);
+}
+function _doPrintQuote(){
   const t=T(),entries=Object.entries(cart); if(!entries.length)return;
   bumpStat("quotes");
   const now=new Date(),valid=new Date(now.getTime()+CONFIG.quoteValidityDays*864e5);
@@ -1930,13 +2035,23 @@ async function sha256(s){
   // احتياطي بسيط (نادراً ما يُستخدم)
   let h=0; for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i)|0;} return "x"+h;
 }
-async function currentPinHash(){ let h=DB.get("adminPin",null); if(!h){ h=await sha256(DEFAULTS.adminPinDefault); DB.set("adminPin",h);} return h; }
+async function currentPinHash(){ return DB.get("adminPin",null); }   // لا إنشاء افتراضي تلقائي
 function goAdmin(){ currentView="admin"; switchView("adminView"); renderAdmin(); window.scrollTo({top:0}); }
 async function tryUnlock(){
+  // 1) المالك المسجّل عبر Firebase يدخل مباشرة (أوثق طريقة)
+  if(FB.isOwner()){ adminUnlocked=true; renderAdmin(); toast(lang==="ar"?"مرحباً أيها المدير 👋":"Welcome 👋","ok"); return; }
   const v=document.getElementById("pinInput").value;
+  const stored=await currentPinHash();
   const h=await sha256(v);
-  if(h===await currentPinHash()){ adminUnlocked=true; renderAdmin(); toast(lang==="ar"?"مرحباً أيها المدير 👋":"Welcome, manager 👋","ok"); }
-  else toast(lang==="ar"?"رمز غير صحيح":"Wrong PIN","err");
+  if(stored){
+    // رمز مضبوط: يُقبل رمزك وحده — 1990 مرفوض نهائياً
+    if(h===stored){ adminUnlocked=true; renderAdmin(); toast(lang==="ar"?"مرحباً أيها المدير 👋":"Welcome 👋","ok"); }
+    else toast(lang==="ar"?"رمز غير صحيح":"Wrong PIN","err");
+  }else{
+    // أول مرة فقط (لا رمز مضبوط بعد): يُسمح بالافتراضي للتهيئة، مع إلزام التغيير
+    if(v===DEFAULTS.adminPinDefault){ adminUnlocked=true; renderAdmin(); toast(lang==="ar"?"أهلاً — عيّن رمزك الخاص فوراً من الإعدادات 🔒":"Set your own PIN now 🔒","ok"); }
+    else toast(lang==="ar"?"رمز غير صحيح":"Wrong PIN","err");
+  }
 }
 function lockAdmin(){ adminUnlocked=false; goHome(); }
 
@@ -2139,6 +2254,7 @@ function adminProducts(){
           ${fbtn(p,"offer","🔥",L?"عرض":"Offer")}
           ${fbtn(p,"new","🆕",L?"وصل حديثاً":"New")}
           ${fbtn(p,"low","⚠️",L?"على وشك النفاد":"Low stock")}
+          ${fbtn(p,"out","⛔",L?"غير متوفر":"Out of stock")}
         </div></div>
       <div class="ai-actions">
         <button class="mini-btn" style="background:${hid?'var(--tint)':'var(--tint-2)'}" onclick="toggleHideProduct('${p.id}')" title="${hid?(L?"إظهار":"Show"):(L?"إخفاء":"Hide")}">${hid?"🚫":"👁"}</button>
@@ -2355,11 +2471,22 @@ function saveSettings(){
 async function changePin(){
   const v=document.getElementById("setPin").value.trim();
   if(v.length<4){ toast(lang==="ar"?"الرمز 4 خانات على الأقل":"PIN min 4 digits","err"); return; }
-  DB.set("adminPin",await sha256(v)); document.getElementById("setPin").value="";
-  toast(lang==="ar"?"تم تحديث الرمز 🔑":"PIN updated 🔑","ok");
+  const hash=await sha256(v);
+  DB.set("adminPin",hash);
+  cloudPushOwnerPin(hash);   // ☁️ يصمد ويتزامن عبر أجهزتك
+  document.getElementById("setPin").value="";
+  toast(lang==="ar"?"تم تحديث الرمز 🔑 (1990 لم يعد يعمل)":"PIN updated 🔑","ok");
+}
+async function cloudPushOwnerPin(hash){
+  if(!FB.ready||!FB.isOwner())return;
+  try{ await FB.db.collection("owner").doc("security").set({pinHash:hash},{merge:true}); }catch(e){ console.warn("pin push",e); }
+}
+async function cloudPullOwnerPin(){
+  if(!FB.ready||!FB.isOwner())return;
+  try{ const s=await FB.db.collection("owner").doc("security").get(); if(s.exists&&s.data().pinHash) DB.set("adminPin",s.data().pinHash); }catch(e){}
 }
 function exportBackup(){
-  const data={};["config","brandOverrides","brandsAdded","brandsHidden","prodOverrides","prodsAdded","prodsHidden","flagsOffer","flagsNew","flagsLow","customerDir","orders","orderSeq","stats","adminPin"].forEach(k=>data[k]=DB.get(k,null));
+  const data={};["config","brandOverrides","brandsAdded","brandsHidden","prodOverrides","prodsAdded","prodsHidden","flagsOffer","flagsNew","flagsLow","flagsOut","customerDir","orders","orderSeq","stats","adminPin"].forEach(k=>data[k]=DB.get(k,null));
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
   const a=document.createElement("a"); a.href=url; a.download="griffin-backup.json"; a.click(); URL.revokeObjectURL(url);
   toast(lang==="ar"?"تم تنزيل النسخة":"Exported","ok");
@@ -2375,7 +2502,7 @@ function importBackup(file){
 }
 function factoryReset(){
   if(!confirm(lang==="ar"?"سيُحذف كل تعديلاتك وتعود الصفحة للوضع الأصلي. متابعة؟":"This erases all edits and restores defaults. Continue?"))return;
-  ["config","brandOverrides","brandsAdded","brandsHidden","prodOverrides","prodsAdded","prodsHidden","flagsOffer","flagsNew","flagsLow"].forEach(k=>DB.del(k));
+  ["config","brandOverrides","brandsAdded","brandsHidden","prodOverrides","prodsAdded","prodsHidden","flagsOffer","flagsNew","flagsLow","flagsOut"].forEach(k=>DB.del(k));
   CONFIG=Object.assign({},DEFAULTS); loadData(); wireLinks(); applyLang(); renderAdmin();
   toast(lang==="ar"?"تمت الاستعادة":"Reset done","ok");
 }
@@ -2417,6 +2544,7 @@ function editProduct(id){
       <label class="flag-chk"><input type="checkbox" id="pFlagOffer" ${id&&hasFlag(id,"offer")?"checked":""}> 🔥 ${L?"عرض":"Offer"}</label>
       <label class="flag-chk"><input type="checkbox" id="pFlagNew" ${id&&hasFlag(id,"new")?"checked":""}> 🆕 ${L?"وصل حديثاً":"New"}</label>
       <label class="flag-chk"><input type="checkbox" id="pFlagLow" ${id&&hasFlag(id,"low")?"checked":""}> ⚠️ ${L?"على وشك النفاد":"Low stock"}</label>
+      <label class="flag-chk"><input type="checkbox" id="pFlagOut" ${id&&hasFlag(id,"out")?"checked":""}> ⛔ ${L?"غير متوفر":"Out of stock"}</label>
     </div>`,
     `<button class="btn btn-primary" onclick="saveProduct(${id?`'${id}'`:"null"})">💾 ${L?"حفظ الصنف":"Save product"}</button>`);
 }
@@ -2447,6 +2575,7 @@ function saveProduct(id){
   toggleFlag(id,"offer",document.getElementById("pFlagOffer").checked);
   toggleFlag(id,"new",document.getElementById("pFlagNew").checked);
   toggleFlag(id,"low",document.getElementById("pFlagLow").checked);
+  toggleFlag(id,"out",document.getElementById("pFlagOut").checked);
   loadData(); closeEditor(); renderAdminBody(); renderAbout(); renderServices(); renderMerch(); refreshCards(); schedulePublish();
   toast(L?"حُفظ الصنف ✓":"Saved ✓","ok");
 }
@@ -2597,6 +2726,7 @@ function boot(){
   // ☁️ تهيئة السحابة: اسحب الكتالوج الحيّ ثم استمع للتحديثات اللحظية
   if(FB.init()){
     cloudPullCatalog().then(()=>cloudListen());
+    FB.authReady.then(()=>{ if(FB.isOwner()){ cloudPullOwnerPin(); cloudListenOwner(); } });
   }
   window.addEventListener("scroll",onScroll,{passive:true});
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu(); } });
