@@ -427,6 +427,22 @@ main{max-width:1000px;margin:0 auto;padding:20px 16px}
   max-width:1000px;margin:0 auto;box-shadow:0 -10px 40px rgba(11,42,60,.25);
 }
 .sheet.open{transform:translateY(0)}
+/* ══ الكمبيوتر والشاشات العريضة: اللوحات نوافذ وسطية أنيقة ══ */
+@media(min-width:760px){
+  .sheet{
+    inset:auto;left:50%;top:50%;bottom:auto;
+    width:min(600px,92vw);max-height:86vh;border-radius:22px;
+    transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;
+    box-shadow:0 30px 80px rgba(3,27,58,.45);
+    transition:transform .3s cubic-bezier(.2,.9,.25,1),opacity .25s;
+  }
+  .sheet.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+  .grip{display:none}
+  .drawer{width:320px}
+  .admin-lock{padding:70px 20px}
+  body{background:linear-gradient(180deg,var(--bg),#e4edf3)}
+  .cart-bar{border-radius:16px;bottom:18px;inset-inline:18px}
+}
 .grip{width:44px;height:5px;background:var(--line);border-radius:99px;margin:10px auto 0}
 .sheet-head{padding:13px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sheet-head h2{font-family:var(--serif);font-size:20px;color:var(--navy);font-weight:700}
@@ -602,6 +618,15 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .cl-badge{font-size:11.5px;font-weight:700;margin:8px 0;min-height:15px}
 .cl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .cl-note{font-size:11px;color:var(--silver-2);line-height:1.6;margin-top:10px}
+/* معاينة صورة عرض السعر */
+.qimg-overlay{position:fixed;inset:0;background:rgba(4,18,38,.75);z-index:120;display:none;align-items:center;justify-content:center;padding:18px}
+.qimg-overlay.open{display:flex}
+.qimg-box{background:var(--card);border-radius:18px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.qimg-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);color:var(--navy);font-size:15px}
+.qimg-scroll{overflow-y:auto;padding:12px;background:var(--bg)}
+.qimg-scroll img{width:100%;border-radius:10px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.qimg-actions{display:flex;gap:9px;padding:13px 16px;border-top:1px solid var(--line);justify-content:center;flex-wrap:wrap}
+.qimg-actions .btn{text-decoration:none}
 .upload-drop.has{padding:8px}
 .upload-drop img{max-height:120px;margin:0 auto;object-fit:contain}
 .upload-drop .up-hint{font-size:12px;color:var(--silver)}
@@ -2026,8 +2051,138 @@ function submitGate(){
 
 function printQuote(){
   const entries=Object.entries(cart); if(!entries.length)return;
-  requireCustomer(_doPrintQuote);
+  requireCustomer(()=>{
+    // جرّب توليد صورة (يعمل على كل الأجهزة بلا طابعة)؛ وإن تعذّر، الطباعة التقليدية
+    try{ buildQuoteImage(); }catch(e){ console.warn("quote image failed, fallback print",e); _doPrintQuote(); }
+  });
 }
+
+/* ══ عرض السعر كصورة: يعمل على كل جهاز، ويُشارك مباشرة على واتساب ══ */
+const _qLogo=new Image(); try{_qLogo.src=IMG.griffin;}catch(e){}
+function buildQuoteImage(){
+  const t=T(), entries=Object.entries(cart);
+  const L=lang==="ar", now=new Date();
+  const valid=new Date(now.getTime()+CONFIG.quoteValidityDays*864e5);
+  const df=d=>d.toLocaleDateString(L?"ar-EG":"fr-FR",{year:"numeric",month:"short",day:"numeric"});
+  const qno="GA-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+String(now.getHours()).padStart(2,"0")+String(now.getMinutes()).padStart(2,"0");
+  const c=getCustomer()||{};
+  const {total}=totals();
+  const rows=entries.map(([id,cc])=>{ const p=byId(id); if(!p)return null;
+    const price=cc.tier==="wholesale"?p.priceWholesale:p.priceRetail;
+    return {name:nm(p.name), tier:t[cc.tier], qty:cc.qty, price, line:price*cc.qty};
+  }).filter(Boolean);
+
+  const W=1000, rowH=64, headH=270, custH=(c.name?70:0), footH=170, tableHead=56;
+  const H=headH+custH+tableHead+rows.length*rowH+90+footH;
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const x=cv.getContext("2d"); if(!x) throw new Error("no canvas");
+  x.textBaseline="middle";
+  const AR=s=>s; // canvas يشكّل العربية تلقائياً عبر محرك النص
+  const F=(sz,w)=> (w||"")+" "+sz+"px 'Segoe UI','Noto Sans Arabic',Tahoma,sans-serif";
+
+  // خلفية
+  x.fillStyle="#ffffff"; x.fillRect(0,0,W,H);
+  // رأس كحلي متدرج
+  const g=x.createLinearGradient(0,0,0,headH); g.addColorStop(0,"#0a4a8f"); g.addColorStop(.6,"#032b60"); g.addColorStop(1,"#011c44");
+  x.fillStyle=g; x.fillRect(0,0,W,headH);
+  // الشعار
+  try{ if(_qLogo.complete&&_qLogo.width) x.drawImage(_qLogo,W/2-80,18,160,120); }catch(e){}
+  x.fillStyle="#fff"; x.textAlign="center";
+  x.font=F(40,"bold"); x.fillText("GRIFFIN AFRICA",W/2,168);
+  x.fillStyle="#a9c8e4"; x.font=F(20); x.fillText(L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti",W/2,200);
+  x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText((L?"عرض سعر":"DEVIS / QUOTE")+"  ·  "+qno,W/2,240);
+
+  let y=headH+10;
+  // بيانات العميل
+  if(c.name){
+    x.fillStyle="#EDF5FA"; x.fillRect(30,y,W-60,54);
+    x.fillStyle="#0F3A52"; x.textAlign=L?"right":"left"; x.font=F(22,"bold");
+    const cust=(L?"العميل: ":"Client: ")+c.name+(c.shop?" — "+c.shop:"")+(c.phone?"  ·  "+c.phone:"");
+    x.fillText(AR(cust), L?W-50:50, y+27);
+    y+=custH;
+  }
+  // تاريخ
+  x.fillStyle="#5b6f7d"; x.font=F(19); x.textAlign=L?"left":"right";
+  x.fillText(df(now), L?50:W-50, y+16); y+=36;
+
+  // رأس الجدول
+  x.fillStyle="#0F3A52"; x.fillRect(30,y,W-60,tableHead);
+  x.fillStyle="#fff"; x.font=F(21,"bold");
+  const cols=L? [ {t:"الصنف",x:W-50,a:"right"},{t:"السعر",x:430,a:"center"},{t:"الكمية",x:300,a:"center"},{t:"الإجمالي",x:140,a:"center"} ]
+              : [ {t:"Article",x:50,a:"left"},{t:"Prix",x:570,a:"center"},{t:"Qté",x:700,a:"center"},{t:"Total",x:860,a:"center"} ];
+  cols.forEach(cl=>{ x.textAlign=cl.a; x.fillText(cl.t,cl.x,y+tableHead/2); });
+  y+=tableHead;
+
+  // الصفوف
+  rows.forEach((r,i)=>{
+    x.fillStyle=i%2?"#F4F8FB":"#ffffff"; x.fillRect(30,y,W-60,rowH);
+    x.fillStyle="#1a2b36";
+    // اسم الصنف (يُقصّ إن طال)
+    x.font=F(21); x.textAlign=L?"right":"left";
+    let name=r.name; while(x.measureText(name).width> (L? W-50-470 : 500) && name.length>3) name=name.slice(0,-2);
+    if(name!==r.name) name+="…";
+    x.fillText(AR(name+"  ("+r.tier+")"), L?W-50:50, y+rowH/2);
+    x.font=F(21,"bold"); x.textAlign="center"; x.fillStyle="#0F3A52";
+    if(L){ x.fillText(fmt(r.price),430,y+rowH/2); x.fillText("×"+fmt(r.qty),300,y+rowH/2); x.fillText(fmt(r.line),140,y+rowH/2); }
+    else { x.fillText(fmt(r.price),570,y+rowH/2); x.fillText("×"+fmt(r.qty),700,y+rowH/2); x.fillText(fmt(r.line),860,y+rowH/2); }
+    y+=rowH;
+  });
+
+  // الإجمالي
+  x.fillStyle="#B8893B"; x.fillRect(30,y,W-60,70);
+  x.fillStyle="#fff"; x.font=F(28,"bold");
+  x.textAlign=L?"right":"left"; x.fillText(L?"الإجمالي الكلي":"TOTAL", L?W-50:50, y+35);
+  x.textAlign=L?"left":"right"; x.fillText(fmt(total)+" "+CONFIG.currency, L?50:W-50, y+35);
+  y+=90;
+
+  // تذييل
+  x.fillStyle="#5b6f7d"; x.font=F(19); x.textAlign="center";
+  x.fillText((L?"⏳ العرض ساري حتى ":"Valable jusqu'au ")+df(valid), W/2, y+10);
+  x.fillText((L?"للطلب والاستفسار: ":"Contact: ")+CONFIG.phoneNumber, W/2, y+44);
+  x.fillStyle="#0F3A52"; x.font=F(20,"bold");
+  x.fillText("Griffin Africa · griffinafrica2020-calc.github.io/griffin-catalog", W/2, y+84);
+
+  const dataUrl=cv.toDataURL("image/png");
+  bumpStat("quotes");
+  showQuotePreview(dataUrl, qno);
+}
+
+/* معاينة الصورة مع مشاركة/حفظ */
+function showQuotePreview(dataUrl,qno){
+  const L=lang==="ar";
+  let ov=document.getElementById("quoteImgOverlay");
+  if(!ov){
+    ov=document.createElement("div"); ov.id="quoteImgOverlay"; ov.className="qimg-overlay";
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML=`
+    <div class="qimg-box">
+      <div class="qimg-head"><b>${L?"عرض السعر جاهز":"Quote ready"}</b><button class="close" onclick="document.getElementById('quoteImgOverlay').classList.remove('open')">✕</button></div>
+      <div class="qimg-scroll"><img src="${dataUrl}" alt="quote"></div>
+      <div class="qimg-actions">
+        <button class="btn btn-primary btn-sm" onclick="shareQuoteImg('${qno}')">📤 ${L?"مشاركة":"Share"}</button>
+        <a class="btn btn-navy btn-sm" download="Griffin-${qno}.png" href="${dataUrl}">💾 ${L?"حفظ":"Save"}</a>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('quoteImgOverlay').classList.remove('open');_doPrintQuote()">🖨️ PDF</button>
+      </div>
+    </div>`;
+  ov.classList.add("open");
+  window._lastQuoteImg={dataUrl,qno};
+}
+async function shareQuoteImg(qno){
+  const d=window._lastQuoteImg; if(!d)return;
+  try{
+    const blob=await (await fetch(d.dataUrl)).blob();
+    const file=new File([blob],"Griffin-"+qno+".png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:"Griffin Africa — "+qno});
+      return;
+    }
+  }catch(e){}
+  // احتياط: تنزيل مباشر
+  const a=document.createElement("a"); a.href=d.dataUrl; a.download="Griffin-"+qno+".png"; a.click();
+  toast(lang==="ar"?"حُفظت الصورة — شاركها من معرضك":"Saved — share from gallery","ok");
+}
+
 function _doPrintQuote(){
   const t=T(),entries=Object.entries(cart); if(!entries.length)return;
   bumpStat("quotes");
@@ -2099,13 +2254,14 @@ function lockAdmin(){ adminUnlocked=false; goHome(); }
 
 function renderAdmin(){
   const host=document.getElementById("adminView");
+  if(!adminUnlocked && FB.isOwner()) adminUnlocked=true;   // المالك المسجّل يدخل مباشرة
   if(!adminUnlocked){
     host.innerHTML=`<div class="admin-lock">
       <div class="ico">🔐</div>
       <h2>${lang==="ar"?"لوحة تحكم المدير":lang==="fr"?"Panneau administrateur":"Manager Panel"}</h2>
       <p>${lang==="ar"?"أدخل رمز الدخول لإدارة الأسعار والأصناف والعلامات والإحصائيات.":lang==="fr"?"Entrez le code pour gérer prix, produits, marques et statistiques.":"Enter your PIN to manage prices, products, brands and stats."}</p>
       <div style="max-width:280px;margin:0 auto">
-        <input class="inp" id="pinInput" type="password" inputmode="numeric" placeholder="••••" style="text-align:center;letter-spacing:.5em;font-size:20px"
+        <input class="inp" id="pinInput" type="password" inputmode="numeric" autocomplete="one-time-code" name="griffin-pin" placeholder="••••" style="text-align:center;letter-spacing:.5em;font-size:20px"
           onkeydown="if(event.key==='Enter')tryUnlock()">
         <button class="btn btn-primary" style="margin-top:12px" onclick="tryUnlock()">${lang==="ar"?"دخول":"Enter"}</button>
         <button class="btn btn-ghost btn-sm" style="margin-top:9px" onclick="goHome()">${lang==="ar"?"رجوع":"Back"}</button>
@@ -2768,7 +2924,9 @@ function boot(){
   // ☁️ تهيئة السحابة: اسحب الكتالوج الحيّ ثم استمع للتحديثات اللحظية
   if(FB.init()){
     cloudPullCatalog().then(()=>cloudListen());
-    FB.authReady.then(()=>{ flushOfflineQueue(); if(FB.isOwner()){ cloudPullOwnerPin(); cloudListenOwner(); } });
+    FB.authReady.then(()=>{ flushOfflineQueue(); if(FB.isOwner()){ cloudPullOwnerPin(); cloudListenOwner();
+      if(currentView==="admin"&&!adminUnlocked) renderAdmin();   // كان على شاشة القفل → افتحها له
+    } });
   }
   window.addEventListener("scroll",onScroll,{passive:true});
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu(); } });
