@@ -940,18 +940,33 @@ const FB = (()=>{
   // المفاتيح التي تُنشر سحابياً كـ"كتالوج حيّ" (يكتبها المدير، يقرأها الجميع)
   const CATALOG_KEYS=["config","brandOverrides","brandsAdded","brandsHidden",
     "prodOverrides","prodsAdded","prodsHidden","flagsOffer","flagsNew","flagsLow","flagsOut"];
+  async function anonWithRetry(n){
+    try{ await auth.signInAnonymously(); }
+    catch(e){
+      console.warn("anon sign-in failed, attempt",n,e);
+      if(n<3) setTimeout(()=>anonWithRetry(n+1), 800*n);   // إعادة محاولة (يعالج تعطّل الشبكة/Safari الخاص)
+    }
+  }
   function init(){
     try{
       if(!window.firebase||!firebase.initializeApp) return false;
       firebase.initializeApp(cfg);
       db=firebase.firestore(); auth=firebase.auth();
       ready=true;
-      // دخول مجهول للعملاء (يتيح إرسال الطلبات بأمان)، ما لم يكن المدير مسجّلاً
-      auth.onAuthStateChanged(u=>{
-        window._fbUser=u;
-        if(u){ _authResolve(u); }              // المصادقة جاهزة → يمكن الإرسال
-        else{ auth.signInAnonymously().catch(()=>{}); }
+      // ثبات الجلسة: LOCAL أولاً، وإن رفضه المتصفح (Safari الخاص يحظر IndexedDB) جرّب SESSION ثم بلا ثبات
+      const trySetPersistence=async()=>{
+        const modes=[firebase.auth.Auth.Persistence.LOCAL, firebase.auth.Auth.Persistence.SESSION, firebase.auth.Auth.Persistence.NONE];
+        for(const m of modes){ try{ await auth.setPersistence(m); return; }catch(e){} }
+      };
+      trySetPersistence().finally(()=>{
+        auth.onAuthStateChanged(u=>{
+          window._fbUser=u;
+          if(u){ _authResolve(u); }              // المصادقة جاهزة → يمكن الإرسال
+          else{ anonWithRetry(1); }
+        });
       });
+      // مهلة أمان: لا تُعلَّق الطلبات للأبد إن تعذّرت المصادقة تماماً (مثلاً Safari خاص يحظر كل شيء)
+      setTimeout(()=>_authResolve(null),8000);
       return true;
     }catch(e){ console.warn("Firebase init failed",e); return false; }
   }
@@ -994,21 +1009,45 @@ async function cloudPullCatalog(){
   }catch(e){ console.warn("pull failed",e); return false; }
 }
 
-/* — إرسال طلب للسجل المركزي — */
-async function cloudPushOrder(order){
+/* — إرسال طلب للسجل المركزي (مع إعادة محاولة + طابور احتياطي محلي) — */
+async function cloudPushOrder(order){ return pushWithRetry("orders",order.num,order); }
+async function cloudPushCustomerCore(c){ return pushWithRetry("customers",waNum(c.phone),c,true); }
+async function pushWithRetry(col,docId,data,merge){
+  if(!FB.ready){ queueOffline(col,docId,data,merge); return; }
+  for(let attempt=1;attempt<=3;attempt++){
+    try{
+      await FB.authReady;
+      await FB.db.collection(col).doc(docId).set(Object.assign({},data,{_ts:Date.now()}),merge?{merge:true}:{});
+      flushOfflineQueue();   // نجح — حاول تفريغ أي طلبات معلّقة سابقة أيضاً
+      return true;
+    }catch(e){
+      console.warn(col+" push failed, attempt",attempt,e);
+      if(attempt<3) await new Promise(r=>setTimeout(r,700*attempt));
+    }
+  }
+  queueOffline(col,docId,data,merge);   // فشلت كل المحاولات → احفظه محلياً ليُعاد إرساله لاحقاً
+  return false;
+}
+/* طابور احتياطي: لا يُفقد أي طلب حتى لو فشلت الشبكة/السحابة تماماً */
+function queueOffline(col,docId,data,merge){
+  const q=DB.get("pendingSync",[]);
+  q.push({col,docId,data,merge,ts:Date.now()});
+  DB.set("pendingSync",q.slice(-100));
+}
+async function flushOfflineQueue(){
   if(!FB.ready) return;
-  try{
-    await FB.authReady;                         // انتظر اكتمال الدخول (يمنع الرفض)
-    await FB.db.collection("orders").doc(order.num).set(Object.assign({},order,{_ts:Date.now()}));
-  }catch(e){ console.warn("order push failed",e); }
+  const q=DB.get("pendingSync",[]); if(!q.length) return;
+  const remaining=[];
+  for(const item of q){
+    try{ await FB.authReady; await FB.db.collection(item.col).doc(item.docId).set(Object.assign({},item.data,{_ts:Date.now()}),item.merge?{merge:true}:{}); }
+    catch(e){ remaining.push(item); }
+  }
+  DB.set("pendingSync",remaining);
 }
 /* — إرسال تسجيل عميل للسجل المركزي — */
 async function cloudPushCustomer(c){
-  if(!FB.ready||!c||!c.phone) return;
-  try{
-    await FB.authReady;
-    await FB.db.collection("customers").doc(waNum(c.phone)).set(Object.assign({},c,{_ts:Date.now()}),{merge:true});
-  }catch(e){ console.warn("customer push failed",e); }
+  if(!c||!c.phone) return;
+  return cloudPushCustomerCore(c);
 }
 
 /* — نشر مؤجل (يجمّع تعديلات المدير المتتالية) — */
@@ -1864,7 +1903,10 @@ function printContainer(id){
   const onFocus=()=>setTimeout(clean,400);   // عند العودة من حوار الحفظ/الطباعة
   window.addEventListener("afterprint",clean);
   window.addEventListener("focus",onFocus);
-  setTimeout(()=>window.print(),120);        // امهل المتصفح ليرسم المحتوى أولاً
+  // Safari/iOS يشترط استدعاء print() مباشرة ومتزامناً ضمن ضغطة المستخدم (لا أي تأخير قبله)
+  const isSafariIOS=/iP(hone|ad|od)/i.test(navigator.userAgent) || (/Safari/i.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS/i.test(navigator.userAgent));
+  if(isSafariIOS) window.print();
+  else setTimeout(()=>window.print(),120);   // أندرويد: امهل المتصفح ليرسم المحتوى أولاً
   setTimeout(clean,60000);                    // أمان بعيد جداً (لا يُفرّغ الـPDF)
 }
 function exportCustomerCard(){
@@ -2726,7 +2768,7 @@ function boot(){
   // ☁️ تهيئة السحابة: اسحب الكتالوج الحيّ ثم استمع للتحديثات اللحظية
   if(FB.init()){
     cloudPullCatalog().then(()=>cloudListen());
-    FB.authReady.then(()=>{ if(FB.isOwner()){ cloudPullOwnerPin(); cloudListenOwner(); } });
+    FB.authReady.then(()=>{ flushOfflineQueue(); if(FB.isOwner()){ cloudPullOwnerPin(); cloudListenOwner(); } });
   }
   window.addEventListener("scroll",onScroll,{passive:true});
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu(); } });
