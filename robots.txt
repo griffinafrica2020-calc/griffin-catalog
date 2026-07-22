@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://griffinafrica2020-calc.github.io/griffin-catalog/sitemap.xml

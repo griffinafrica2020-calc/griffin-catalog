@@ -1176,7 +1176,7 @@ function saveConfig(){ DB.set("config", {
    🖼️ الصور المضمّنة (شعارات + أصناف)
    ══════════════════════════════════════════════════════════ */
 const IMG = {
-  griffin:"img/griffin.webp",
+  griffin:"img/griffin.webp", griffin_hero:"img/griffin_hero.webp",
   saudia900:"img/saudia900.webp", saudia25:"img/saudia25.webp",
   wonderful:"img/wonderful.webp", corners_b:"img/corners_b.webp", corners_k:"img/corners_k.webp",
   delisso8:"img/delisso8.webp", delisso_m:"img/delisso_m.webp", carre_d:"img/carre_d.webp",
@@ -2150,7 +2150,7 @@ function buildQuoteImage(){
   x.fillStyle="#5b6f7d"; x.font=F(19); x.textAlign="center";
   x.fillText((L?"⏳ العرض ساري حتى ":"Valable jusqu'au ")+df(valid), W/2, y+8);
   // كبسولة الواتساب الذهبية
-  const ph=fmtPhonePro(CONFIG.whatsappNumber);
+  const ph="\u202A"+fmtPhonePro(CONFIG.whatsappNumber)+"\u202C";   // فرض اتجاه LTR للرقم
   x.font=F(24,"bold"); const pw=x.measureText(ph).width+130;
   const bx=W/2-pw/2, by=y+30, bh=56;
   const pg=x.createLinearGradient(bx,by,bx,by+bh); pg.addColorStop(0,"#C89B4A"); pg.addColorStop(1,"#A9782F");
