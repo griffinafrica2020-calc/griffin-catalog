@@ -617,6 +617,43 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .cl-mail{font-size:11px;color:var(--silver);direction:ltr}
 .cl-badge{font-size:11.5px;font-weight:700;margin:8px 0;min-height:15px}
 .cl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap .pw-inp{flex:1;padding-inline-end:44px}
+.pw-eye{position:absolute;inset-inline-end:8px;background:none;border:none;font-size:18px;cursor:pointer;padding:6px;line-height:1;opacity:.7}
+.pw-eye:active{opacity:1}
+/* اختيار نقدي/آجل */
+.pay-choice{display:flex;gap:9px;margin-bottom:11px}
+.pay-opt{flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--line);background:var(--tint-2);color:var(--silver);font-size:13.5px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+.pay-opt.on{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 12px rgba(15,58,82,.25)}
+.pay-opt.on b{color:#7BE3A4!important}
+.pay-opt:active{transform:scale(.97)}
+/* تواصل معنا */
+.contact-wrap{padding:16px 18px}
+.contact-main{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,#0a4a8f,#032b60);color:#fff;border-radius:16px;padding:16px;text-decoration:none;margin-bottom:16px}
+.cm-ico{font-size:30px}.cm-t{font-weight:800;font-size:15px}.cm-s{font-size:13px;color:#a9c8e4;margin-top:2px}
+.contact-sec{font-size:12px;font-weight:800;color:var(--silver);text-transform:uppercase;letter-spacing:.04em;margin:16px 4px 10px}
+.rep-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px;text-decoration:none;margin-bottom:9px;box-shadow:var(--shadow)}
+.rep-photo{width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--tint);display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.rep-photo img{width:100%;height:100%;object-fit:cover}
+.rep-info{flex:1}.rep-name{font-weight:700;font-size:14px;color:var(--navy)}.rep-phone{font-size:12px;color:var(--silver)}
+.rep-wa{font-size:22px}
+.chan-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.chan-btn{display:flex;align-items:center;gap:9px;padding:13px;border-radius:13px;background:var(--card);border:1.5px solid var(--line);border-inline-start:4px solid var(--cc,var(--sky));text-decoration:none;color:var(--ink);font-weight:700;font-size:13px}
+.chan-btn span{font-size:19px}
+/* الشروط */
+.terms-wrap{padding:16px 18px}
+.terms-sec{margin-bottom:20px}
+.terms-sec h3{font-size:15px;color:var(--navy);margin-bottom:8px}
+.terms-sec p{font-size:13.5px;color:var(--ink);line-height:1.8}
+/* حول التطبيق */
+.aboutapp{padding:24px 20px;text-align:center}
+.aa-logo{width:130px;height:auto;margin:0 auto 4px;display:block}
+.aa-name{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--navy)}
+.aa-tag{font-size:12.5px;color:var(--silver);margin-top:3px}
+.aa-ver{display:inline-block;margin:14px 0;background:var(--tint);color:var(--navy);font-weight:700;font-size:13px;padding:6px 16px;border-radius:99px}
+.aa-build{color:var(--silver);font-weight:400;font-size:11px}
+.aa-desc{font-size:13px;color:var(--silver-2);line-height:1.8;margin-bottom:16px}
+.aa-status{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--silver)}
 .cl-note{font-size:11px;color:var(--silver-2);line-height:1.6;margin-top:10px}
 /* معاينة صورة عرض السعر */
 .qimg-overlay{position:fixed;inset:0;background:rgba(4,18,38,.75);z-index:120;display:none;align-items:center;justify-content:center;padding:18px}
@@ -796,6 +833,10 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   </div>
   <div class="sheet-body"><div class="sheet-list" id="cartList"></div></div>
   <div class="sheet-foot">
+    <div class="pay-choice" id="payChoice">
+      <button class="pay-opt" id="payCash" onclick="setPayMode('cash')">💵 <span data-i18n="payCash">نقدي</span></button>
+      <button class="pay-opt" id="payCredit" onclick="setPayMode('credit')">🗓️ <span data-i18n="payCredit">آجل</span></button>
+    </div>
     <textarea class="inp" id="orderNote" rows="1" placeholder="📝 ملاحظة على الطلب (اختياري)..." style="margin-bottom:11px;font-size:13px;min-height:0;height:42px" oninput="DB.set('orderNote',this.value)"></textarea>
     <div class="grand">
       <span class="label" data-i18n="grandTotal">الإجمالي الكلي</span>
@@ -880,11 +921,37 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   <button class="dr-item" onclick="goSection('brandsGrid')"><span>🏷️</span><b data-i18n="mBrands">العلامات والأصناف</b></button>
   <div class="dr-sep"></div>
   <button class="dr-item" onclick="closeMenu();openCustomer()"><span>👤</span><b data-i18n="mCust">تسجيل / بياناتي</b></button>
-  <a class="dr-item" id="menuCall" href="#"><span>📞</span><b data-i18n="mCall">اتصل بنا</b></a>
+  <button class="dr-item" onclick="openContact()"><span>📞</span><b data-i18n="mContact">تواصل معنا</b></button>
   <a class="dr-item" id="menuChannel" href="#" target="_blank" rel="noopener"><span>📢</span><b data-i18n="mChannel">قناة العروض</b></a>
+  <button class="dr-item" onclick="openTerms()"><span>📄</span><b data-i18n="mTerms">الشروط والأحكام</b></button>
+  <button class="dr-item" onclick="openAbout()"><span>ℹ️</span><b data-i18n="mAboutApp">حول التطبيق</b></button>
   <div class="dr-sep"></div>
   <button class="dr-item dr-admin" onclick="closeMenu();goAdmin()"><span>⚙️</span><b data-i18n="mAdmin">لوحة المدير</b></button>
 </nav>
+
+<!-- ══ تواصل معنا (مندوبون + قنوات) ══ -->
+<div class="backdrop" id="contactBackdrop" onclick="closeContact()"></div>
+<div class="sheet" id="contactSheet">
+  <div class="grip"></div>
+  <div class="sheet-head"><h2 data-i18n="contactTitle">تواصل معنا</h2><button class="close" onclick="closeContact()">✕</button></div>
+  <div class="sheet-body" id="contactBody"></div>
+</div>
+
+<!-- ══ الشروط والأحكام ══ -->
+<div class="backdrop" id="termsBackdrop" onclick="closeTerms()"></div>
+<div class="sheet" id="termsSheet">
+  <div class="grip"></div>
+  <div class="sheet-head"><h2 data-i18n="mTerms">الشروط والأحكام</h2><button class="close" onclick="closeTerms()">✕</button></div>
+  <div class="sheet-body" id="termsBody"></div>
+</div>
+
+<!-- ══ حول التطبيق ══ -->
+<div class="backdrop" id="aboutBackdrop" onclick="closeAbout()"></div>
+<div class="sheet" id="aboutSheet">
+  <div class="grip"></div>
+  <div class="sheet-head"><h2 data-i18n="mAboutApp">حول التطبيق</h2><button class="close" onclick="closeAbout()">✕</button></div>
+  <div class="sheet-body" id="aboutBody"></div>
+</div>
 <button class="to-top" id="toTop" onclick="scrollTop()" aria-label="العودة إلى الأعلى"><span aria-hidden="true">↑</span></button>
 <div class="lightbox" id="lightbox" onclick="closeLightbox()" role="dialog" aria-label="عرض مكبّر للصنف">
   <button class="lb-close" onclick="closeLightbox()" aria-label="إغلاق"><span aria-hidden="true">✕</span></button>
@@ -926,9 +993,17 @@ const DEFAULTS = {
   wholesaleThreshold: 10,
   quoteValidityDays: 7,
   address: "Djibouti",
+  creditDays: 30,                 // مدة الأجل الافتراضية (يوم)
+  cashDiscount: 0,                // نسبة خصم النقدي % (يضبطها المدير)
+  terms: "",                      // الشروط والأحكام / سياسة البيع (يحرّرها المدير)
+  returnPolicy: "",               // سياسة الاستبدال والإرجاع
+  reps: [],                       // مندوبو المبيعات: [{name,phone,photo}]
+  channels: { whatsapp:"", tiktok:"", youtube:"", facebook:"" },
+  appVersion: "2.1",              // رقم النسخة الظاهر في "حول التطبيق"
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
+const APP_BUILD = "v22";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 
 /* ══════════════════════════════════════════════════════════
    🗄️ طبقة التخزين المحلي (مع احتياطي في الذاكرة)
@@ -1170,7 +1245,10 @@ if(DB.get("configV",1) < 2){
 function saveConfig(){ DB.set("config", {
   whatsappNumber:CONFIG.whatsappNumber, phoneNumber:CONFIG.phoneNumber, channelUrl:CONFIG.channelUrl,
   currency:CONFIG.currency, wholesaleThreshold:CONFIG.wholesaleThreshold,
-  quoteValidityDays:CONFIG.quoteValidityDays, address:CONFIG.address }); }
+  quoteValidityDays:CONFIG.quoteValidityDays, address:CONFIG.address,
+  creditDays:CONFIG.creditDays, cashDiscount:CONFIG.cashDiscount,
+  terms:CONFIG.terms, returnPolicy:CONFIG.returnPolicy,
+  reps:CONFIG.reps, channels:CONFIG.channels, appVersion:CONFIG.appVersion }); }
 
 /* ══════════════════════════════════════════════════════════
    🖼️ الصور المضمّنة (شعارات + أصناف)
@@ -1347,9 +1425,9 @@ const I18N = {
     ourBrands:"علاماتنا التجارية", ourBrandsSub:"اختر علامة لعرض أصنافها بأسعار الجملة والتجزئة.",
     svcEyebrow:"نحن في خدمتك", svcTitle:"خدمات العملاء",
     compatT:"لأفضل تجربة وللطلب بسهولة، افتح الرابط في متصفح Chrome", compatOpen:"افتح في Chrome",
-    gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة",
+    gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة", payCash:"نقدي", payCredit:"آجل", day:"يوم",
     menuTitle:"القائمة", mAbout:"من نحن", mWhy:"لماذا جريفن؟", mSvc:"خدمات العملاء", mBrands:"العلامات والأصناف",
-    mCust:"تسجيل / بياناتي", mCall:"اتصل بنا", mChannel:"قناة العروض", mAdmin:"لوحة المدير",
+    mCust:"تسجيل / بياناتي", mContact:"تواصل معنا", mChannel:"قناة العروض", mTerms:"الشروط والأحكام", mAboutApp:"حول التطبيق", mAdmin:"لوحة المدير", contactTitle:"تواصل معنا",
     whyEyebrow:"شريكك الموثوق في جيبوتي", whyTitle:"لماذا جريفن أفريقيا؟",
     why1:"تعامل مباشر وثقة", why1d:"علاقة شخصية مع كل عميل — كلمتنا التزام وبضاعتنا أصلية 100%",
     why2:"استيراد مباشر من المصانع", why2d:"وكلاء معتمدون لعلامات عالمية — أسعار جملة بلا وسطاء",
@@ -1390,9 +1468,9 @@ const I18N = {
     ourBrands:"Nos marques", ourBrandsSub:"Choisissez une marque pour voir ses produits en prix gros et détail.",
     svcEyebrow:"À votre service", svcTitle:"Services client",
     compatT:"Pour une meilleure expérience et pour commander, ouvrez le lien dans Chrome", compatOpen:"Ouvrir dans Chrome",
-    gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer",
+    gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer", payCash:"Comptant", payCredit:"Crédit", day:"j",
     menuTitle:"Menu", mAbout:"Qui sommes-nous", mWhy:"Pourquoi Griffin ?", mSvc:"Services client", mBrands:"Marques & produits",
-    mCust:"Mon compte", mCall:"Appelez-nous", mChannel:"Chaîne des offres", mAdmin:"Administration",
+    mCust:"Mon compte", mContact:"Contactez-nous", mChannel:"Chaîne des offres", mTerms:"Conditions", mAboutApp:"À propos", mAdmin:"Administration", contactTitle:"Contactez-nous",
     whyEyebrow:"Votre partenaire de confiance à Djibouti", whyTitle:"Pourquoi Griffin Africa ?",
     why1:"Relation directe et confiance", why1d:"Un contact personnel avec chaque client — produits 100% authentiques",
     why2:"Import direct des usines", why2d:"Distributeurs agréés de marques mondiales — prix de gros sans intermédiaires",
@@ -1433,9 +1511,9 @@ const I18N = {
     ourBrands:"Our Brands", ourBrandsSub:"Pick a brand to see its products at wholesale and retail prices.",
     svcEyebrow:"At your service", svcTitle:"Customer Services",
     compatT:"For the best experience and to order, open this link in Chrome", compatOpen:"Open in Chrome",
-    gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue",
+    gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue", payCash:"Cash", payCredit:"Credit", day:"d",
     menuTitle:"Menu", mAbout:"About us", mWhy:"Why Griffin?", mSvc:"Customer services", mBrands:"Brands & products",
-    mCust:"My account", mCall:"Call us", mChannel:"Offers channel", mAdmin:"Admin",
+    mCust:"My account", mContact:"Contact us", mChannel:"Offers channel", mTerms:"Terms", mAboutApp:"About", mAdmin:"Admin", contactTitle:"Contact us",
     whyEyebrow:"Your trusted partner in Djibouti", whyTitle:"Why Griffin Africa?",
     why1:"Direct relationship & trust", why1d:"Personal contact with every client — 100% authentic goods",
     why2:"Direct factory imports", why2d:"Authorized distributors of global brands — wholesale prices, no middlemen",
@@ -1768,12 +1846,37 @@ function clearCart(){ if(!Object.keys(cart).length)return; if(confirm(T().confir
 function persistCart(){ DB.set("cart",cart); }
 function refreshCards(){ if(currentView==="brand")openBrand(activeBrand,true); else if(currentView==="search")runSearch(document.getElementById("searchInput").value); }
 function totals(){ let items=0,total=0; for(const [id,c] of Object.entries(cart)){ const p=byId(id); if(!p){delete cart[id];continue;} items+=c.qty; total+=c.qty*(c.tier==="wholesale"?p.priceWholesale:p.priceRetail); } return {items,total}; }
+function payMode(){ return DB.get("payMode","cash"); }
+function setPayMode(m){
+  DB.set("payMode",m);
+  const cash=document.getElementById("payCash"), cr=document.getElementById("payCredit");
+  if(cash&&cr){ cash.classList.toggle("on",m==="cash"); cr.classList.toggle("on",m==="credit"); }
+  renderCart();
+}
+function cashDiscountRate(){ const d=Number(CONFIG.cashDiscount)||0; return (payMode()==="cash"&&d>0)?d/100:0; }
 function renderCart(){
   const t=T(),{items,total}=totals();
+  const disc=Math.round(total*cashDiscountRate());
+  const net=total-disc;
   document.getElementById("cartBar").classList.toggle("visible",items>0);
   document.getElementById("cartCount").textContent=fmt(items);
-  document.getElementById("cartBarTotal").textContent=fmt(total);
-  document.getElementById("grandTotal").textContent=fmt(total);
+  document.getElementById("cartBarTotal").textContent=fmt(net);
+  document.getElementById("grandTotal").textContent=fmt(net);
+  // حدّث أزرار الدفع + شارة خصم النقدي
+  const m=payMode();
+  const cashBtn=document.getElementById("payCash"), crBtn=document.getElementById("payCredit");
+  if(cashBtn&&crBtn){
+    cashBtn.classList.toggle("on",m==="cash"); crBtn.classList.toggle("on",m==="credit");
+    const dr=Number(CONFIG.cashDiscount)||0;
+    cashBtn.innerHTML="💵 "+t.payCash+(dr>0?` <b style="color:#178544">−${dr}%</b>`:"");
+    crBtn.innerHTML="🗓️ "+t.payCredit+(CONFIG.creditDays?` <small style="opacity:.7">(${CONFIG.creditDays} ${t.day})</small>`:"");
+  }
+  const gEl=document.querySelector("#cartSheet .grand .value");
+  if(gEl){
+    gEl.innerHTML = disc>0
+      ? `<span style="text-decoration:line-through;opacity:.5;font-size:13px">${fmt(total)}</span> <span id="grandTotal">${fmt(net)}</span> <small class="curLabel">${CONFIG.currency}</small>`
+      : `<span id="grandTotal">${fmt(net)}</span> <small class="curLabel">${CONFIG.currency}</small>`;
+  }
   const list=document.getElementById("cartList");
   const entries=Object.entries(cart);
   if(!entries.length){ list.innerHTML=`<div class="sheet-empty"><div class="big">🛒</div><b>${t.emptyCart}</b><br>${t.emptyCartHint}</div>`; return; }
@@ -1985,9 +2088,22 @@ function orderLines(){
     lines.push(`${i+1}. ${nm(p.name)} — ${cc.qty} × ${fmt(price)} = ${fmt(price*cc.qty)} ${CONFIG.currency} (${t.waTier[cc.tier]})`);
   });
   const {total}=totals();
+  const disc=Math.round(total*cashDiscountRate());
+  const net=total-disc;
   const note=(DB.get("orderNote","")||"").trim();
   if(note) lines.push("",`📝 ${lang==="ar"?"ملاحظة":lang==="fr"?"Note":"Note"}: ${note}`);
-  lines.push("",`💰 ${t.waTotal}: ${fmt(total)} ${CONFIG.currency}`);
+  // نوع الدفع
+  const m=payMode();
+  const payLabel = m==="cash"
+    ? `💵 ${t.payCash}` + (disc>0?` (${lang==="ar"?"خصم":lang==="fr"?"remise":"discount"} ${CONFIG.cashDiscount}%)`:"")
+    : `🗓️ ${t.payCredit}` + (CONFIG.creditDays?` (${CONFIG.creditDays} ${t.day})`:"");
+  lines.push("",payLabel);
+  if(disc>0){
+    lines.push(`${lang==="ar"?"قبل الخصم":lang==="fr"?"Sous-total":"Subtotal"}: ${fmt(total)} ${CONFIG.currency}`);
+    lines.push(`💰 ${t.waTotal}: ${fmt(net)} ${CONFIG.currency}`);
+  } else {
+    lines.push(`💰 ${t.waTotal}: ${fmt(net)} ${CONFIG.currency}`);
+  }
   return lines.join("\n");
 }
 /* سجل الطلبات: رقم تسلسلي + حفظ محلي */
@@ -2003,10 +2119,12 @@ function saveOrder(num){
     return {id, name:nm(p.name), qty:e.qty, tier:e.tier, price, total:price*e.qty};
   }).filter(Boolean);
   const {total}=totals();
+  const disc=Math.round(total*cashDiscountRate());
   const orders=DB.get("orders",[]);
   const cid=Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
-  orders.push({num, _cid:cid, ts:Date.now(), cust:{name:c.name||"",phone:c.phone||"",shop:c.shop||""},
-    items, total, note:(DB.get("orderNote","")||"").trim(), status:"pending"});
+  orders.push({num, _cid:cid, ts:Date.now(), cust:{name:c.name||"",phone:c.phone||"",shop:c.shop||"",location:c.location||""},
+    items, total, disc, net:total-disc, pay:payMode(), creditDays:payMode()==="credit"?CONFIG.creditDays:0,
+    note:(DB.get("orderNote","")||"").trim(), status:"pending"});
   if(orders.length>300) orders.splice(0,orders.length-300);
   DB.set("orders",orders);
   cloudPushOrder(orders[orders.length-1]);   // ☁️ سجل مركزي
@@ -2267,6 +2385,13 @@ async function sha256(s){
   // احتياطي بسيط (نادراً ما يُستخدم)
   let h=0; for(let i=0;i<s.length;i++){h=(h<<5)-h+s.charCodeAt(i)|0;} return "x"+h;
 }
+/* 👁️ إظهار/إخفاء كلمة السر */
+function togglePw(id,btn){
+  const el=document.getElementById(id); if(!el)return;
+  const show=el.type==="password";
+  el.type=show?"text":"password";
+  btn.textContent=show?"🙈":"👁️";
+}
 async function currentPinHash(){ return DB.get("adminPin",null); }   // لا إنشاء افتراضي تلقائي
 function goAdmin(){ currentView="admin"; switchView("adminView"); renderAdmin(); window.scrollTo({top:0}); }
 async function tryUnlock(){
@@ -2296,7 +2421,7 @@ function renderAdmin(){
       <h2>${lang==="ar"?"لوحة تحكم المدير":lang==="fr"?"Panneau administrateur":"Manager Panel"}</h2>
       <p>${lang==="ar"?"أدخل رمز الدخول لإدارة الأسعار والأصناف والعلامات والإحصائيات.":lang==="fr"?"Entrez le code pour gérer prix, produits, marques et statistiques.":"Enter your PIN to manage prices, products, brands and stats."}</p>
       <div style="max-width:280px;margin:0 auto">
-        <input class="inp" id="pinInput" type="password" inputmode="numeric" autocomplete="one-time-code" name="griffin-pin" placeholder="••••" style="text-align:center;letter-spacing:.5em;font-size:20px"
+        <input class="inp pw-inp" id="pinInput" type="password" inputmode="numeric" autocomplete="one-time-code" name="griffin-pin" placeholder="••••" style="text-align:center;letter-spacing:.5em;font-size:20px"
           onkeydown="if(event.key==='Enter')tryUnlock()">
         <button class="btn btn-primary" style="margin-top:12px" onclick="tryUnlock()">${lang==="ar"?"دخول":"Enter"}</button>
         <button class="btn btn-ghost btn-sm" style="margin-top:9px" onclick="goHome()">${lang==="ar"?"رجوع":"Back"}</button>
@@ -2617,7 +2742,7 @@ function cloudBoxHTML(){
     <div class="cl-title">☁️ ${L?"تسجيل دخول المدير للمزامنة السحابية":"Owner sign-in for cloud sync"}</div>
     <div class="cl-sub">${L?"سجّل دخولك لتنشر أسعارك وعروضك لكل العملاء، وتستقبل طلباتهم مركزياً.":"Sign in to publish to all customers and receive orders centrally."}</div>
     <input class="inp" id="fbEmail" type="email" placeholder="${L?"بريدك الإلكتروني":"Email"}" dir="ltr" style="margin:8px 0">
-    <input class="inp" id="fbPass" type="password" placeholder="${L?"كلمة المرور":"Password"}" dir="ltr">
+    <div class="pw-wrap"><input class="inp pw-inp" id="fbPass" type="password" placeholder="${L?"كلمة المرور":"Password"}" dir="ltr"><button type="button" class="pw-eye" onclick="togglePw('fbPass',this)">👁️</button></div>
     <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="doFbLogin()">🔑 ${L?"دخول":"Sign in"}</button>
     <div id="fbLoginMsg" class="cl-msg"></div>
   </div>`;
@@ -2674,11 +2799,41 @@ function adminSettings(){
     <div class="field"><label>${L?"صلاحية العرض (يوم)":"Quote validity (days)"}</label><input class="inp" id="setVal" type="number" min="1" value="${CONFIG.quoteValidityDays}"></div>
     <div class="field"><label>${L?"العنوان":"Address"}</label><input class="inp" id="setAddr" value="${esc(CONFIG.address)}"></div>
   </div>
+  <div class="inp-row">
+    <div class="field"><label>💵 ${L?"خصم النقدي %":"Cash discount %"}</label><input class="inp" id="setCashDisc" type="number" min="0" max="90" value="${Number(CONFIG.cashDiscount)||0}"><div class="hint">${L?"سعر مميز يشجّع الطلب النقدي":"Rewards cash orders"}</div></div>
+    <div class="field"><label>🗓️ ${L?"مدة الأجل (يوم)":"Credit period (days)"}</label><input class="inp" id="setCreditDays" type="number" min="0" value="${Number(CONFIG.creditDays)||30}"></div>
+  </div>
   <button class="btn btn-primary" onclick="saveSettings()">💾 ${L?"حفظ الإعدادات":"Save settings"}</button>
 
   <div class="hairline" style="margin:22px 0"></div>
+  <div class="admin-note">📄 ${L?"الشروط والأحكام وسياسة الإرجاع (تظهر للعملاء في القائمة).":"Terms & return policy (shown to customers)."}</div>
+  <div class="field"><label>${L?"سياسة البيع والشروط":"Sales terms"}</label><textarea class="inp" id="setTerms" rows="4" style="height:auto;min-height:80px">${esc(CONFIG.terms||"")}</textarea></div>
+  <div class="field"><label>${L?"سياسة الاستبدال والإرجاع":"Return & exchange policy"}</label><textarea class="inp" id="setReturn" rows="4" style="height:auto;min-height:80px">${esc(CONFIG.returnPolicy||"")}</textarea></div>
+  <button class="btn btn-primary btn-sm" onclick="saveTerms()">💾 ${L?"حفظ الشروط":"Save terms"}</button>
+
+  <div class="hairline" style="margin:22px 0"></div>
+  <div class="admin-note">📞 ${L?"مندوبو المبيعات (يظهرون في «تواصل معنا»). أضف اسماً ورقماً.":"Sales reps (shown in Contact). Add name & phone."}</div>
+  <div id="repsList">${renderRepsAdmin()}</div>
+  <div class="inp-row"><input class="inp" id="repName" placeholder="${L?"اسم المندوب":"Rep name"}"><input class="inp" id="repPhone" placeholder="${L?"الرقم الدولي":"Intl phone"}" dir="ltr"></div>
+  <button class="btn btn-navy btn-sm" onclick="addRep()">➕ ${L?"إضافة مندوب":"Add rep"}</button>
+
+  <div class="hairline" style="margin:22px 0"></div>
+  <div class="admin-note">🔗 ${L?"روابط القنوات (تظهر في «تواصل معنا»). اتركها فارغة لإخفائها.":"Channel links (shown in Contact). Leave blank to hide."}</div>
+  <div class="field"><label>💬 WhatsApp</label><input class="inp" id="chWa" value="${esc((CONFIG.channels||{}).whatsapp||"")}" dir="ltr"></div>
+  <div class="inp-row">
+    <div class="field"><label>🎵 TikTok</label><input class="inp" id="chTt" value="${esc((CONFIG.channels||{}).tiktok||"")}" dir="ltr"></div>
+    <div class="field"><label>▶️ YouTube</label><input class="inp" id="chYt" value="${esc((CONFIG.channels||{}).youtube||"")}" dir="ltr"></div>
+  </div>
+  <div class="field"><label>👥 Facebook</label><input class="inp" id="chFb" value="${esc((CONFIG.channels||{}).facebook||"")}" dir="ltr"></div>
+  <button class="btn btn-primary btn-sm" onclick="saveChannels()">💾 ${L?"حفظ القنوات":"Save channels"}</button>
+
+  <div class="hairline" style="margin:22px 0"></div>
+  <div class="field"><label>${L?"رقم النسخة (يظهر في «حول التطبيق»)":"Version (in About)"}</label><input class="inp" id="setAppVer" value="${esc(CONFIG.appVersion||"2.1")}"></div>
+  <button class="btn btn-ghost btn-sm" onclick="saveAppVer()">💾 ${L?"حفظ رقم النسخة":"Save version"}</button>
+
+  <div class="hairline" style="margin:22px 0"></div>
   <div class="field"><label>${L?"تغيير رمز دخول المدير":"Change manager PIN"}</label>
-    <input class="inp" id="setPin" type="password" inputmode="numeric" placeholder="${L?"رمز جديد":"New PIN"}"></div>
+    <div class="pw-wrap"><input class="inp pw-inp" id="setPin" type="password" inputmode="numeric" placeholder="${L?"رمز جديد":"New PIN"}"><button type="button" class="pw-eye" onclick="togglePw('setPin',this)">👁️</button></div></div>
   <button class="btn btn-navy btn-sm" onclick="changePin()">🔑 ${L?"تحديث الرمز":"Update PIN"}</button>
 
   <div class="hairline" style="margin:22px 0"></div>
@@ -2698,8 +2853,72 @@ function saveSettings(){
   CONFIG.wholesaleThreshold=Math.max(1,parseInt(document.getElementById("setThr").value)||10);
   CONFIG.quoteValidityDays=Math.max(1,parseInt(document.getElementById("setVal").value)||7);
   CONFIG.address=document.getElementById("setAddr").value.trim()||"Djibouti";
+  CONFIG.cashDiscount=Math.min(90,Math.max(0,parseFloat(document.getElementById("setCashDisc").value)||0));
+  CONFIG.creditDays=Math.max(0,parseInt(document.getElementById("setCreditDays").value)||30);
   saveConfig(); wireLinks(); applyLang(); schedulePublish();
   toast(lang==="ar"?"حُفظت الإعدادات ✓":"Saved ✓","ok");
+}
+function saveTerms(){
+  CONFIG.terms=document.getElementById("setTerms").value.trim();
+  CONFIG.returnPolicy=document.getElementById("setReturn").value.trim();
+  saveConfig(); schedulePublish();
+  toast(lang==="ar"?"حُفظت الشروط ✓":"Terms saved ✓","ok");
+}
+function saveChannels(){
+  CONFIG.channels={
+    whatsapp:document.getElementById("chWa").value.trim(),
+    tiktok:document.getElementById("chTt").value.trim(),
+    youtube:document.getElementById("chYt").value.trim(),
+    facebook:document.getElementById("chFb").value.trim(),
+  };
+  saveConfig(); schedulePublish();
+  toast(lang==="ar"?"حُفظت القنوات ✓":"Channels saved ✓","ok");
+}
+function saveAppVer(){
+  CONFIG.appVersion=document.getElementById("setAppVer").value.trim()||"2.1";
+  saveConfig(); schedulePublish();
+  toast(lang==="ar"?"حُفظ رقم النسخة ✓":"Version saved ✓","ok");
+}
+function compressImg(dataUrl,max,cb){
+  const im=new Image();
+  im.onload=()=>{
+    const s=Math.min(1,max/Math.max(im.width,im.height));
+    const cv=document.createElement("canvas"); cv.width=Math.round(im.width*s); cv.height=Math.round(im.height*s);
+    cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);
+    let out; try{ out=cv.toDataURL("image/webp",0.8); if(out.indexOf("webp")<0)throw 0; }catch(e){ out=cv.toDataURL("image/jpeg",0.8); }
+    cb(out);
+  };
+  im.src=dataUrl;
+}
+function renderRepsAdmin(){
+  const L=lang==="ar"; const reps=CONFIG.reps||[];
+  if(!reps.length) return `<div style="font-size:12px;color:var(--silver);padding:6px 0">${L?"لا مندوبين بعد":"No reps yet"}</div>`;
+  return reps.map((r,i)=>`<div class="rep-admin-row">
+    <div class="rep-photo" onclick="pickRepPhoto(${i})" style="cursor:pointer">${r.photo?`<img src="${r.photo}" alt="">`:"📷"}</div>
+    <div style="flex:1"><b style="font-size:13px">${esc(r.name)}</b><div style="font-size:11px;color:var(--silver)" dir="ltr">${esc(r.phone)}</div></div>
+    <button class="mini-btn del" onclick="removeRep(${i})">🗑</button>
+  </div>`).join("");
+}
+function addRep(){
+  const name=document.getElementById("repName").value.trim();
+  const phone=document.getElementById("repPhone").value.trim();
+  if(!name||!phone){ toast(lang==="ar"?"الاسم والرقم مطلوبان":"Name & phone required","err"); return; }
+  CONFIG.reps=(CONFIG.reps||[]).concat([{name,phone,photo:""}]);
+  saveConfig(); schedulePublish(); renderAdminBody();
+  toast(lang==="ar"?"أُضيف المندوب ✓":"Rep added ✓","ok");
+}
+function removeRep(i){
+  CONFIG.reps=(CONFIG.reps||[]).filter((_,idx)=>idx!==i);
+  saveConfig(); schedulePublish(); renderAdminBody();
+}
+function pickRepPhoto(i){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f)return;
+    const rd=new FileReader(); rd.onload=()=>{ compressImg(rd.result,240,dataUrl=>{
+      CONFIG.reps[i].photo=dataUrl; saveConfig(); schedulePublish(); renderAdminBody();
+    }); }; rd.readAsDataURL(f);
+  };
+  inp.click();
 }
 async function changePin(){
   const v=document.getElementById("setPin").value.trim();
@@ -2877,13 +3096,113 @@ function pickImage(file,which){
    🔗 ربط الروابط + الإقلاع
    ══════════════════════════════════════════════════════════ */
 function wireLinks(){
-  document.getElementById("menuCall").href="tel:"+CONFIG.phoneNumber;
-  document.getElementById("menuChannel").href=CONFIG.channelUrl;
-  document.getElementById("channelLink").href=CONFIG.channelUrl;
+  const ch=document.getElementById("menuChannel"); if(ch) ch.href=CONFIG.channelUrl;
+  const cl=document.getElementById("channelLink"); if(cl) cl.href=CONFIG.channelUrl;
 }
 function scrollTop(){ window.scrollTo({top:0,behavior:"smooth"}); }
 function openMenu(){ document.getElementById("menuBackdrop").classList.add("open"); document.getElementById("menuDrawer").classList.add("open"); }
 function closeMenu(){ document.getElementById("menuBackdrop").classList.remove("open"); document.getElementById("menuDrawer").classList.remove("open"); }
+
+/* ══ تواصل معنا (مندوبون + قنوات) ══ */
+function openContact(){ closeMenu(); renderContact();
+  document.getElementById("contactBackdrop").classList.add("open");
+  document.getElementById("contactSheet").classList.add("open"); }
+function closeContact(){ document.getElementById("contactBackdrop").classList.remove("open"); document.getElementById("contactSheet").classList.remove("open"); }
+function renderContact(){
+  const L=lang==="ar", t=T();
+  const reps=CONFIG.reps||[];
+  const ch=CONFIG.channels||{};
+  const chIcons=[
+    {k:"whatsapp",ico:"💬",label:"WhatsApp",color:"#25D366"},
+    {k:"tiktok",ico:"🎵",label:"TikTok",color:"#000"},
+    {k:"youtube",ico:"▶️",label:"YouTube",color:"#FF0000"},
+    {k:"facebook",ico:"👥",label:"Facebook",color:"#1877F2"},
+  ].filter(c=>ch[c.k]);
+  let html=`<div class="contact-wrap">`;
+  // المبيعات الرئيسي
+  html+=`<a class="contact-main" href="https://wa.me/${waNum(CONFIG.whatsappNumber)}" target="_blank" rel="noopener">
+    <span class="cm-ico">💬</span>
+    <div><div class="cm-t">${L?"مبيعات جريفن أفريقيا":"Griffin Africa Sales"}</div><div class="cm-s" dir="ltr">${esc(fmtPhonePro(CONFIG.whatsappNumber))}</div></div></a>`;
+  // المندوبون
+  if(reps.length){
+    html+=`<div class="contact-sec">${L?"مندوبو المبيعات":"Sales representatives"}</div>`;
+    html+=reps.map(r=>`
+      <a class="rep-card" href="https://wa.me/${waNum(r.phone)}" target="_blank" rel="noopener">
+        <div class="rep-photo">${r.photo?`<img src="${r.photo}" alt="">`:"👤"}</div>
+        <div class="rep-info"><div class="rep-name">${esc(r.name)}</div><div class="rep-phone" dir="ltr">${esc(fmtPhonePro(r.phone))}</div></div>
+        <span class="rep-wa">💬</span>
+      </a>`).join("");
+  }
+  // القنوات
+  if(chIcons.length){
+    html+=`<div class="contact-sec">${L?"تابعنا على":"Follow us"}</div><div class="chan-grid">`;
+    html+=chIcons.map(c=>`<a class="chan-btn" href="${esc(ch[c.k])}" target="_blank" rel="noopener" style="--cc:${c.color}"><span>${c.ico}</span>${c.label}</a>`).join("");
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  document.getElementById("contactBody").innerHTML=html;
+}
+
+/* ══ الشروط والأحكام ══ */
+function openTerms(){ closeMenu(); renderTerms();
+  document.getElementById("termsBackdrop").classList.add("open");
+  document.getElementById("termsSheet").classList.add("open"); }
+function closeTerms(){ document.getElementById("termsBackdrop").classList.remove("open"); document.getElementById("termsSheet").classList.remove("open"); }
+function renderTerms(){
+  const L=lang==="ar";
+  const terms=(CONFIG.terms||"").trim(), ret=(CONFIG.returnPolicy||"").trim();
+  let html=`<div class="terms-wrap">`;
+  if(!terms&&!ret){
+    html+=`<div class="empty-state"><div class="ico">📄</div><b>${L?"لم تُضف الشروط بعد":"No terms yet"}</b><span>${L?"يضيفها المدير من لوحة الإدارة":"Added by admin"}</span></div>`;
+  }else{
+    if(terms) html+=`<div class="terms-sec"><h3>📋 ${L?"سياسة البيع والشروط":"Sales terms"}</h3><p>${esc(terms).replace(/\n/g,"<br>")}</p></div>`;
+    if(ret) html+=`<div class="terms-sec"><h3>↩️ ${L?"سياسة الاستبدال والإرجاع":"Return & exchange"}</h3><p>${esc(ret).replace(/\n/g,"<br>")}</p></div>`;
+  }
+  html+=`</div>`;
+  document.getElementById("termsBody").innerHTML=html;
+}
+
+/* ══ حول التطبيق ══ */
+function openAbout(){ closeMenu(); renderAboutApp();
+  document.getElementById("aboutBackdrop").classList.add("open");
+  document.getElementById("aboutSheet").classList.add("open"); }
+function closeAbout(){ document.getElementById("aboutBackdrop").classList.remove("open"); document.getElementById("aboutSheet").classList.remove("open"); }
+function renderAboutApp(){
+  const L=lang==="ar";
+  const ver=CONFIG.appVersion||"2.1";
+  document.getElementById("aboutBody").innerHTML=`
+    <div class="aboutapp">
+      <img class="aa-logo" src="${IMG.griffin_hero}" alt="Griffin Africa">
+      <div class="aa-name">${L?"كتالوج جريفن أفريقيا":"Griffin Africa Catalogue"}</div>
+      <div class="aa-tag">${L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti"}</div>
+      <div class="aa-ver">${L?"الإصدار":"Version"} ${esc(ver)} <span class="aa-build">(${APP_BUILD})</span></div>
+      <p class="aa-desc">${L?"كتالوج تفاعلي لعملاء الجملة: تصفّح منتجاتنا بأسعار محدّثة، واطلب مباشرة عبر واتساب. نهتم بعملائنا ونسعى لخدمتهم بأفضل صورة.":"Interactive wholesale catalogue: browse live prices and order via WhatsApp. We care about our customers."}</p>
+      <div class="aa-status" id="aaStatus">🔄 ${L?"جارٍ التحقق من التحديثات...":"Checking for updates..."}</div>
+      <button class="btn btn-ghost btn-sm" onclick="checkForUpdate()">🔄 ${L?"التحقق من التحديثات":"Check for updates"}</button>
+    </div>`;
+  checkForUpdate();
+}
+async function checkForUpdate(){
+  const el=document.getElementById("aaStatus"); if(!el)return;
+  const L=lang==="ar";
+  el.textContent="🔄 "+(L?"جارٍ التحقق...":"Checking...");
+  try{
+    if("serviceWorker" in navigator){
+      const reg=await navigator.serviceWorker.getRegistration();
+      if(reg){ reg.update(); }
+    }
+    // قارن النسخة المخزّنة برقم البناء الحالي
+    const seen=DB.get("seenBuild",null);
+    if(seen && seen!==APP_BUILD){
+      el.innerHTML=`✨ ${L?"تم التحديث لأحدث نسخة":"Updated to latest"} (${APP_BUILD})`;
+      el.style.color="#178544";
+    }else{
+      el.innerHTML=`✅ ${L?"أنت على أحدث نسخة":"You're up to date"}`;
+      el.style.color="#178544";
+    }
+    DB.set("seenBuild",APP_BUILD);
+  }catch(e){ el.textContent="✅ "+(L?"أحدث نسخة":"Up to date"); }
+}
 function goSection(id){
   closeMenu(); if(currentView!=="home") goHome();
   setTimeout(()=>{ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); },80);
@@ -2964,7 +3283,7 @@ function boot(){
     } });
   }
   window.addEventListener("scroll",onScroll,{passive:true});
-  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu(); } });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu();closeContact();closeTerms();closeAbout();closeGate(); } });
 }
 boot();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
