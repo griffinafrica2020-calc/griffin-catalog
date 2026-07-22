@@ -1035,7 +1035,13 @@ async function cloudPullCatalog(){
 }
 
 /* — إرسال طلب للسجل المركزي (مع إعادة محاولة + طابور احتياطي محلي) — */
-async function cloudPushOrder(order){ return pushWithRetry("orders",order.num,order); }
+/* — إرسال طلب للسجل المركزي (معرّف فريد عالمياً يمنع التصادم) — */
+async function cloudPushOrder(order){
+  // معرّف سحابي فريد لا يتصادم بين الأجهزة (رقم GA يبقى تسمية داخل الطلب)
+  const cid=order._cid || (Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8));
+  order._cid=cid;
+  return pushWithRetry("orders",cid,order);
+}
 async function cloudPushCustomerCore(c){ return pushWithRetry("customers",waNum(c.phone),c,true); }
 async function pushWithRetry(col,docId,data,merge){
   if(!FB.ready){ queueOffline(col,docId,data,merge); return; }
@@ -1128,8 +1134,8 @@ function cloudListenOwner(){
   _ordersListening=true;
   // الطلبات
   FB.db.collection("orders").orderBy("_ts","desc").limit(300).onSnapshot(snap=>{
-    const local=DB.get("orders",[]); const seen=new Set(local.map(o=>o.num)); let added=0;
-    snap.forEach(doc=>{ const o=doc.data(); if(!seen.has(o.num)){ local.push(o); seen.add(o.num); added++; } });
+    const local=DB.get("orders",[]); const seen=new Set(local.map(o=>o._cid||o.num)); let added=0;
+    snap.forEach(doc=>{ const o=doc.data(); o._cid=o._cid||doc.id; if(!seen.has(o._cid)){ local.push(o); seen.add(o._cid); added++; } });
     if(added){
       local.sort((a,b)=>(a._ts||0)-(b._ts||0));
       DB.set("orders",local.slice(-300));
@@ -1998,7 +2004,8 @@ function saveOrder(num){
   }).filter(Boolean);
   const {total}=totals();
   const orders=DB.get("orders",[]);
-  orders.push({num, ts:Date.now(), cust:{name:c.name||"",phone:c.phone||"",shop:c.shop||""},
+  const cid=Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
+  orders.push({num, _cid:cid, ts:Date.now(), cust:{name:c.name||"",phone:c.phone||"",shop:c.shop||""},
     items, total, note:(DB.get("orderNote","")||"").trim(), status:"pending"});
   if(orders.length>300) orders.splice(0,orders.length-300);
   DB.set("orders",orders);
@@ -2058,7 +2065,12 @@ function printQuote(){
 }
 
 /* ══ عرض السعر كصورة: يعمل على كل جهاز، ويُشارك مباشرة على واتساب ══ */
-const _qLogo=new Image(); try{_qLogo.src=IMG.griffin;}catch(e){}
+const _qLogo=new Image(); try{_qLogo.src=IMG.griffin_hero;}catch(e){}
+function fmtPhonePro(p){
+  const d=waNum(p);
+  if(d.startsWith("253")&&d.length===11) return "+253 "+d.slice(3).replace(/(\d{2})(?=\d)/g,"$1 ");
+  return "+"+d.replace(/(\d{3})(\d{2})(?=\d)/, "$1 $2 ").replace(/(\d{2})(?=\d\d)/g,"$1 ");
+}
 function buildQuoteImage(){
   const t=T(), entries=Object.entries(cart);
   const L=lang==="ar", now=new Date();
@@ -2072,7 +2084,7 @@ function buildQuoteImage(){
     return {name:nm(p.name), tier:t[cc.tier], qty:cc.qty, price, line:price*cc.qty};
   }).filter(Boolean);
 
-  const W=1000, rowH=64, headH=270, custH=(c.name?70:0), footH=170, tableHead=56;
+  const W=1000, rowH=64, headH=330, custH=(c.name?70:0), footH=210, tableHead=56;
   const H=headH+custH+tableHead+rows.length*rowH+90+footH;
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   const x=cv.getContext("2d"); if(!x) throw new Error("no canvas");
@@ -2082,15 +2094,14 @@ function buildQuoteImage(){
 
   // خلفية
   x.fillStyle="#ffffff"; x.fillRect(0,0,W,H);
-  // رأس كحلي متدرج
+  // رأس كحلي متدرج (نفس تدرج الواجهة)
   const g=x.createLinearGradient(0,0,0,headH); g.addColorStop(0,"#0a4a8f"); g.addColorStop(.6,"#032b60"); g.addColorStop(1,"#011c44");
   x.fillStyle=g; x.fillRect(0,0,W,headH);
-  // الشعار
-  try{ if(_qLogo.complete&&_qLogo.width) x.drawImage(_qLogo,W/2-80,18,160,120); }catch(e){}
-  x.fillStyle="#fff"; x.textAlign="center";
-  x.font=F(40,"bold"); x.fillText("GRIFFIN AFRICA",W/2,168);
-  x.fillStyle="#a9c8e4"; x.font=F(20); x.fillText(L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti",W/2,200);
-  x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText((L?"عرض سعر":"DEVIS / QUOTE")+"  ·  "+qno,W/2,240);
+  // الشعار الرسمي الكامل (الأسد + GRIFFIN AFRICA) — نفس شعار الواجهة
+  try{ if(_qLogo.complete&&_qLogo.width){ const lw=300, lh=lw*(_qLogo.height/_qLogo.width); x.drawImage(_qLogo,W/2-lw/2,14,lw,lh); } }catch(e){}
+  x.textAlign="center";
+  x.fillStyle="#a9c8e4"; x.font=F(19); x.fillText(L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti",W/2,headH-56);
+  x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText((L?"عرض سعر":"DEVIS / QUOTE")+"  ·  "+qno,W/2,headH-22);
 
   let y=headH+10;
   // بيانات العميل
@@ -2137,19 +2148,36 @@ function buildQuoteImage(){
 
   // تذييل
   x.fillStyle="#5b6f7d"; x.font=F(19); x.textAlign="center";
-  x.fillText((L?"⏳ العرض ساري حتى ":"Valable jusqu'au ")+df(valid), W/2, y+10);
-  x.fillText((L?"للطلب والاستفسار: ":"Contact: ")+CONFIG.phoneNumber, W/2, y+44);
-  x.fillStyle="#0F3A52"; x.font=F(20,"bold");
-  x.fillText("Griffin Africa · griffinafrica2020-calc.github.io/griffin-catalog", W/2, y+84);
+  x.fillText((L?"⏳ العرض ساري حتى ":"Valable jusqu'au ")+df(valid), W/2, y+8);
+  // كبسولة الواتساب الذهبية
+  const ph=fmtPhonePro(CONFIG.whatsappNumber);
+  x.font=F(24,"bold"); const pw=x.measureText(ph).width+130;
+  const bx=W/2-pw/2, by=y+30, bh=56;
+  const pg=x.createLinearGradient(bx,by,bx,by+bh); pg.addColorStop(0,"#C89B4A"); pg.addColorStop(1,"#A9782F");
+  x.fillStyle=pg;
+  if(x.roundRect){ x.beginPath(); x.roundRect(bx,by,pw,bh,28); x.fill(); }
+  else x.fillRect(bx,by,pw,bh);
+  x.fillStyle="#fff"; x.textAlign="center";
+  x.fillText((L?"واتساب  ":"WhatsApp  ")+ph, W/2, by+bh/2);
+  x.fillStyle="#0F3A52"; x.font=F(19,"bold");
+  x.fillText("Griffin Africa · griffinafrica2020-calc.github.io/griffin-catalog", W/2, by+bh+34);
 
-  const dataUrl=cv.toDataURL("image/png");
   bumpStat("quotes");
-  showQuotePreview(dataUrl, qno);
+  // Blob بدل dataURL النصّي الضخم (يمنع تعليق المتصفح، خاصة الخفي)
+  cv.toBlob(function(blob){
+    if(!blob){ showQuotePreview(cv.toDataURL("image/png"), qno, null); return; }
+    const url=URL.createObjectURL(blob);
+    showQuotePreview(url, qno, blob);
+  }, "image/png", 0.92);
 }
 
 /* معاينة الصورة مع مشاركة/حفظ */
-function showQuotePreview(dataUrl,qno){
+function showQuotePreview(imgUrl,qno,blob){
   const L=lang==="ar";
+  // نظّف أي رابط سابق لتحرير الذاكرة
+  if(window._lastQuoteImg&&window._lastQuoteImg.url&&window._lastQuoteImg.url.startsWith("blob:")){
+    try{ URL.revokeObjectURL(window._lastQuoteImg.url); }catch(e){}
+  }
   let ov=document.getElementById("quoteImgOverlay");
   if(!ov){
     ov=document.createElement("div"); ov.id="quoteImgOverlay"; ov.className="qimg-overlay";
@@ -2157,29 +2185,36 @@ function showQuotePreview(dataUrl,qno){
   }
   ov.innerHTML=`
     <div class="qimg-box">
-      <div class="qimg-head"><b>${L?"عرض السعر جاهز":"Quote ready"}</b><button class="close" onclick="document.getElementById('quoteImgOverlay').classList.remove('open')">✕</button></div>
-      <div class="qimg-scroll"><img src="${dataUrl}" alt="quote"></div>
+      <div class="qimg-head"><b>${L?"عرض السعر جاهز":"Quote ready"}</b><button class="close" onclick="closeQuoteImg()">✕</button></div>
+      <div class="qimg-scroll"><img src="${imgUrl}" alt="quote"></div>
       <div class="qimg-actions">
         <button class="btn btn-primary btn-sm" onclick="shareQuoteImg('${qno}')">📤 ${L?"مشاركة":"Share"}</button>
-        <a class="btn btn-navy btn-sm" download="Griffin-${qno}.png" href="${dataUrl}">💾 ${L?"حفظ":"Save"}</a>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('quoteImgOverlay').classList.remove('open');_doPrintQuote()">🖨️ PDF</button>
+        <button class="btn btn-navy btn-sm" onclick="saveQuoteImg('${qno}')">💾 ${L?"حفظ":"Save"}</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeQuoteImg();_doPrintQuote()">🖨️ PDF</button>
       </div>
     </div>`;
   ov.classList.add("open");
-  window._lastQuoteImg={dataUrl,qno};
+  window._lastQuoteImg={url:imgUrl,qno,blob};
+}
+function closeQuoteImg(){
+  const ov=document.getElementById("quoteImgOverlay"); if(ov)ov.classList.remove("open");
 }
 async function shareQuoteImg(qno){
   const d=window._lastQuoteImg; if(!d)return;
   try{
-    const blob=await (await fetch(d.dataUrl)).blob();
+    const blob=d.blob||await (await fetch(d.url)).blob();
     const file=new File([blob],"Griffin-"+qno+".png",{type:"image/png"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       await navigator.share({files:[file],title:"Griffin Africa — "+qno});
       return;
     }
-  }catch(e){}
-  // احتياط: تنزيل مباشر
-  const a=document.createElement("a"); a.href=d.dataUrl; a.download="Griffin-"+qno+".png"; a.click();
+  }catch(e){ console.warn("share failed",e); }
+  saveQuoteImg(qno);   // إن تعذّرت المشاركة → حفظ
+}
+function saveQuoteImg(qno){
+  const d=window._lastQuoteImg; if(!d)return;
+  const a=document.createElement("a"); a.href=d.url; a.download="Griffin-"+qno+".png";
+  document.body.appendChild(a); a.click(); a.remove();
   toast(lang==="ar"?"حُفظت الصورة — شاركها من معرضك":"Saved — share from gallery","ok");
 }
 
@@ -2365,7 +2400,7 @@ function adminOrders(){
   const dfm=ts=>new Date(ts).toLocaleDateString(L?"ar-EG":"fr-FR",{day:"numeric",month:"short"})+" · "+new Date(ts).toLocaleTimeString(L?"ar-EG":"fr-FR",{hour:"2-digit",minute:"2-digit"});
   const stBtns=o=>Object.keys(ORDER_ST).map(s=>{
     const m=ORDER_ST[s];
-    return `<button class="st-btn ${m.cls} ${o.status===s?'on':''}" onclick="setOrderStatus('${o.num}','${s}')">${m.ico} ${m[lang]||m.en}</button>`;
+    return `<button class="st-btn ${m.cls} ${o.status===s?'on':''}" onclick="setOrderStatus('${o._cid||o.num}','${s}')">${m.ico} ${m[lang]||m.en}</button>`;
   }).join("");
   const rows=orders.map(o=>{
     const m=ORDER_ST[o.status]||ORDER_ST.pending;
@@ -2380,20 +2415,20 @@ function adminOrders(){
         ${o.items.map(i=>`<div class="oc-line"><span>${esc(i.name)} ×${i.qty}</span><span>${fmt(i.total)}</span></div>`).join("")}
         ${o.note?`<div class="oc-note">📝 ${esc(o.note)}</div>`:""}
       </details>
-      <div class="oc-actions">${stBtns(o)}<button class="mini-btn del" onclick="deleteOrder('${o.num}')" title="${L?"حذف":"Delete"}">🗑</button></div>
+      <div class="oc-actions">${stBtns(o)}<button class="mini-btn del" onclick="deleteOrder('${o._cid||o.num}')" title="${L?"حذف":"Delete"}">🗑</button></div>
     </div>`;
   }).join("");
   return `<div class="admin-note">📋 ${L?`الطلبات المُرسلة من هذا الجهاز. <b>⏳ ${counts.pending}</b> قيد الانتظار · <b>✅ ${counts.delivered}</b> منزّلة · <b>❌ ${counts.cancelled}</b> ملغاة. <i>(مع ربط Firebase لاحقاً ستصلك طلبات كل العملاء هنا مركزياً)</i>`:`Orders sent from this device. ⏳ ${counts.pending} pending · ✅ ${counts.delivered} delivered · ❌ ${counts.cancelled} cancelled.`}</div>${rows}`;
 }
-function setOrderStatus(num,st){
+function setOrderStatus(key,st){
   const orders=DB.get("orders",[]);
-  const o=orders.find(x=>x.num===num); if(!o)return;
+  const o=orders.find(x=>(x._cid||x.num)===key); if(!o)return;
   o.status=st; DB.set("orders",orders);
   renderAdminBody(); toast(lang==="ar"?"حُدّثت حالة الطلب ✓":"Status updated ✓","ok");
 }
-function deleteOrder(num){
+function deleteOrder(key){
   if(!confirm(lang==="ar"?"حذف هذا الطلب من السجل؟":"Delete this order?"))return;
-  DB.set("orders",DB.get("orders",[]).filter(x=>x.num!==num));
+  DB.set("orders",DB.get("orders",[]).filter(x=>(x._cid||x.num)!==key));
   renderAdminBody();
 }
 
@@ -2611,8 +2646,8 @@ async function pullCloudData(){
       FB.db.collection("customers").orderBy("_ts","desc").limit(500).get(),
     ]);
     // ادمج الطلبات (بلا تكرار حسب num)
-    const local=DB.get("orders",[]); const seen=new Set(local.map(o=>o.num));
-    os.forEach(doc=>{ const o=doc.data(); if(!seen.has(o.num)){ local.push(o); seen.add(o.num);} });
+    const local=DB.get("orders",[]); const seen=new Set(local.map(o=>o._cid||o.num));
+    os.forEach(doc=>{ const o=doc.data(); o._cid=o._cid||doc.id; if(!seen.has(o._cid)){ local.push(o); seen.add(o._cid);} });
     local.sort((a,b)=>(a._ts||0)-(b._ts||0));
     DB.set("orders",local.slice(-300));
     // ادمج العملاء (بلا تكرار حسب phone)
