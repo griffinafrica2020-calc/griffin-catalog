@@ -66,6 +66,12 @@ body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:10
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit}
 img{display:block}
+/* شريط إشعار التحديث */
+#updateBar{display:none;position:fixed;top:0;inset-inline:0;z-index:200;background:linear-gradient(135deg,#178544,#0f6b37);color:#fff;
+  padding:11px 16px;align-items:center;justify-content:space-between;gap:12px;font-size:13px;box-shadow:0 3px 14px rgba(0,0,0,.3)}
+#updateBar.show{display:flex}
+#updateBar .ub-btn{background:#fff;color:#0f6b37;font-weight:800;font-size:12.5px;border:none;border-radius:9px;padding:8px 16px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+#updateBar .ub-btn:active{transform:scale(.96)}
 /* شريط تنبيه التوافق (يظهر فقط للمتصفحات الضاغطة) */
 #compatBar{display:none;position:sticky;top:0;z-index:90;background:linear-gradient(135deg,#B8893B,#9a6f28);color:#fff;
   padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;box-shadow:0 3px 12px rgba(0,0,0,.25)}
@@ -725,6 +731,10 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
+<div id="updateBar" role="alert">
+  <span>🔄 <b data-i18n="updateReady">يتوفّر تحديث جديد للتطبيق</b></span>
+  <button class="ub-btn" onclick="applyUpdate()" data-i18n="updateNow">تحديث الآن</button>
+</div>
 <div id="compatBar" role="alert">
   <span class="cb-txt">⚠️ <b data-i18n="compatT">لأفضل تجربة وللطلب بسهولة، افتح الرابط في متصفح Chrome</b></span>
   <div class="cb-actions">
@@ -999,11 +1009,11 @@ const DEFAULTS = {
   returnPolicy: "",               // سياسة الاستبدال والإرجاع
   reps: [],                       // مندوبو المبيعات: [{name,phone,photo}]
   channels: { whatsapp:"", tiktok:"", youtube:"", facebook:"" },
-  appVersion: "2.1",              // رقم النسخة الظاهر في "حول التطبيق"
+  appVersion: "2.2",              // رقم النسخة الظاهر في "حول التطبيق"
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v22";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v23";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 
 /* ══════════════════════════════════════════════════════════
    🗄️ طبقة التخزين المحلي (مع احتياطي في الذاكرة)
@@ -1424,6 +1434,7 @@ const I18N = {
     aboutEyebrow:"بيت الاستيراد والتوزيع", portfolio:"محفظة العلامات",
     ourBrands:"علاماتنا التجارية", ourBrandsSub:"اختر علامة لعرض أصنافها بأسعار الجملة والتجزئة.",
     svcEyebrow:"نحن في خدمتك", svcTitle:"خدمات العملاء",
+    updateReady:"يتوفّر تحديث جديد للتطبيق", updateNow:"تحديث الآن",
     compatT:"لأفضل تجربة وللطلب بسهولة، افتح الرابط في متصفح Chrome", compatOpen:"افتح في Chrome",
     gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة", payCash:"نقدي", payCredit:"آجل", day:"يوم",
     menuTitle:"القائمة", mAbout:"من نحن", mWhy:"لماذا جريفن؟", mSvc:"خدمات العملاء", mBrands:"العلامات والأصناف",
@@ -1467,6 +1478,7 @@ const I18N = {
     aboutEyebrow:"Maison d'import & distribution", portfolio:"Portefeuille de marques",
     ourBrands:"Nos marques", ourBrandsSub:"Choisissez une marque pour voir ses produits en prix gros et détail.",
     svcEyebrow:"À votre service", svcTitle:"Services client",
+    updateReady:"Une nouvelle version est disponible", updateNow:"Mettre à jour",
     compatT:"Pour une meilleure expérience et pour commander, ouvrez le lien dans Chrome", compatOpen:"Ouvrir dans Chrome",
     gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer", payCash:"Comptant", payCredit:"Crédit", day:"j",
     menuTitle:"Menu", mAbout:"Qui sommes-nous", mWhy:"Pourquoi Griffin ?", mSvc:"Services client", mBrands:"Marques & produits",
@@ -1510,6 +1522,7 @@ const I18N = {
     aboutEyebrow:"Import & Distribution House", portfolio:"Brand Portfolio",
     ourBrands:"Our Brands", ourBrandsSub:"Pick a brand to see its products at wholesale and retail prices.",
     svcEyebrow:"At your service", svcTitle:"Customer Services",
+    updateReady:"A new version is available", updateNow:"Update now",
     compatT:"For the best experience and to order, open this link in Chrome", compatOpen:"Open in Chrome",
     gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue", payCash:"Cash", payCredit:"Credit", day:"d",
     menuTitle:"Menu", mAbout:"About us", mWhy:"Why Griffin?", mSvc:"Customer services", mBrands:"Brands & products",
@@ -3242,7 +3255,38 @@ function onScroll(){
     ticking=false;
   });
 }
-/* ══ كاشف المتصفحات الضاغطة/المحدودة ══ */
+/* ══ نظام التحديث الذكي: يكتشف النسخة الجديدة ويعرض شريط تحديث ══ */
+let _waitingSW=null, _reloading=false;
+function initSW(){
+  if(!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("sw.js").then(reg=>{
+    // إن وُجدت نسخة منتظرة أصلاً
+    if(reg.waiting && navigator.serviceWorker.controller){ _waitingSW=reg.waiting; showUpdateBar(); }
+    // مراقبة أي تحديث جديد يُثبَّت
+    reg.addEventListener("updatefound",()=>{
+      const nw=reg.installing; if(!nw)return;
+      nw.addEventListener("statechange",()=>{
+        if(nw.state==="installed" && navigator.serviceWorker.controller){
+          _waitingSW=nw; showUpdateBar();   // نسخة جديدة جاهزة
+        }
+      });
+    });
+    // افحص وجود تحديث كل 60 ثانية وعند العودة للتطبيق
+    setInterval(()=>reg.update().catch(()=>{}),60000);
+    document.addEventListener("visibilitychange",()=>{ if(!document.hidden) reg.update().catch(()=>{}); });
+  }).catch(()=>{});
+  // عند تفعيل النسخة الجديدة → أعِد التحميل مرة واح(دة
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(_reloading)return; _reloading=true; location.reload();
+  });
+}
+function showUpdateBar(){ const b=document.getElementById("updateBar"); if(b) b.classList.add("show"); }
+function applyUpdate(){
+  const b=document.getElementById("updateBar"); if(b) b.classList.remove("show");
+  if(_waitingSW){ _waitingSW.postMessage({type:"SKIP_WAITING"}); }
+  else location.reload();
+}
+
 function openInChrome(){
   const url=location.href.split("#")[0];
   // محاولة فتح في Chrome عبر intent (أندرويد)
@@ -3275,6 +3319,7 @@ function boot(){
   applyLang();
   renderCustBadge();
   detectCompat();
+  initSW();   // نظام التحديث الذكي
   // ☁️ تهيئة السحابة: اسحب الكتالوج الحيّ ثم استمع للتحديثات اللحظية
   if(FB.init()){
     cloudPullCatalog().then(()=>cloudListen());
@@ -3286,7 +3331,6 @@ function boot(){
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu();closeContact();closeTerms();closeAbout();closeGate(); } });
 }
 boot();
-if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
 </script>
 </body>
 </html>
