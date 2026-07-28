@@ -643,6 +643,16 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   padding:12px 16px;border-radius:14px;font-size:13.5px;font-weight:700;box-shadow:0 4px 14px rgba(168,120,47,.28);animation:annIn .4s ease}
 .announce .ann-ico{font-size:19px;flex-shrink:0}
 .announce .ann-txt{line-height:1.5}
+/* منتقي أصناف الإرجاع */
+.ret-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ret-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.ret-row{display:flex;align-items:center;gap:9px;background:var(--tint-2);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-size:13px}
+.ret-row b{color:var(--navy);font-size:13px}
+.ret-meta{font-size:11.5px;color:var(--silver);margin-top:2px}
+.ret-empty{font-size:12px;color:var(--silver);text-align:center;padding:10px}
+/* صورة الإعلان */
+.announce.has-img{padding:10px 14px}
+.ann-img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#fff;flex-shrink:0}
 @keyframes annIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 /* تواصل معنا */
 .contact-wrap{padding:16px 18px}
@@ -986,7 +996,18 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   <div class="sheet-body" style="padding:16px 18px">
     <p style="font-size:12.5px;color:var(--silver);line-height:1.7;margin-bottom:14px" data-i18n="returnIntro">املأ بيانات الإرجاع وسنتواصل معك. تُرفق بياناتك تلقائياً.</p>
     <div class="field"><label data-i18n="returnOrderNo">رقم الطلب المرجعي (اختياري)</label><input class="inp" id="retOrderNo" placeholder="GA-..." dir="ltr"></div>
-    <div class="field"><label data-i18n="returnItems">الأصناف المراد إرجاعها *</label><textarea class="inp" id="retItems" rows="3" style="height:auto;min-height:70px" placeholder="—"></textarea></div>
+    <div class="field"><label data-i18n="returnItems">الأصناف المراد إرجاعها *</label>
+      <div class="ret-picker">
+        <select class="inp" id="retBrandSel" onchange="fillRetProducts()"></select>
+        <select class="inp" id="retProdSel"></select>
+      </div>
+      <div class="ret-picker" style="margin-top:8px">
+        <input class="inp" id="retQty" type="number" min="1" value="1" placeholder="الكمية">
+        <input class="inp" id="retExpiry" type="date" dir="ltr" title="تاريخ الصلاحية">
+      </div>
+      <button class="btn btn-navy btn-sm" style="margin-top:8px;width:100%" onclick="addRetItem()">➕ <span data-i18n="retAddItem">إضافة الصنف للقائمة</span></button>
+      <div id="retList" class="ret-list"></div>
+    </div>
     <div class="field"><label data-i18n="returnReason">سبب الإرجاع *</label>
       <select class="inp" id="retReason">
         <option value="تالف / منتهي" data-i18n="retR1">تالف / منتهي الصلاحية</option>
@@ -1050,11 +1071,11 @@ const DEFAULTS = {
   channels: { whatsapp:"", tiktok:"", youtube:"", facebook:"" },
   appVersion: "2.2",              // رقم النسخة الظاهر في "حول التطبيق"
   hidePrices: false,              // إخفاء كل الأسعار وإظهار "اتصل للسعر"
-  announce: { text:"", active:false, until:"" },   // شريط إعلان (على وشك الوصول/وصل اليوم...)
+  announce: { text:"", active:false, until:"", productId:"" },   // شريط إعلان (على وشك الوصول/وصل اليوم...)
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v25";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v26";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 /* بيانات الترويسة الرسمية (ثابتة في المستندات) */
 const COMPANY = {
   ar:{ name:"شركة جريفن أفريقيا", branch:"فرع جيبوتي",
@@ -1495,7 +1516,7 @@ const I18N = {
     compatT:"لأفضل تجربة وللطلب بسهولة، افتح الرابط في متصفح Chrome", compatOpen:"افتح في Chrome",
     gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة", payCash:"نقدي", payCredit:"آجل", day:"يوم", callForPrice:"اتصل للسعر",
     menuTitle:"القائمة", mAbout:"من نحن", mWhy:"لماذا جريفن؟", mSvc:"خدمات العملاء", mBrands:"العلامات والأصناف",
-    mCust:"تسجيل / بياناتي", mContact:"تواصل معنا", mChannel:"قناة العروض", mTerms:"الشروط والأحكام", mAboutApp:"حول التطبيق", mAdmin:"لوحة المدير", contactTitle:"تواصل معنا", mReturn:"طلب إرجاع بضاعة", returnIntro:"املأ بيانات الإرجاع وسنتواصل معك. تُرفق بياناتك تلقائياً.", returnOrderNo:"رقم الطلب المرجعي (اختياري)", returnItems:"الأصناف المراد إرجاعها *", returnReason:"سبب الإرجاع *", returnNote:"ملاحظات إضافية (اختياري)", returnSend:"إرسال طلب الإرجاع",
+    mCust:"تسجيل / بياناتي", mContact:"تواصل معنا", mChannel:"قناة العروض", mTerms:"الشروط والأحكام", mAboutApp:"حول التطبيق", mAdmin:"لوحة المدير", contactTitle:"تواصل معنا", mReturn:"طلب إرجاع بضاعة", returnIntro:"املأ بيانات الإرجاع وسنتواصل معك. تُرفق بياناتك تلقائياً.", returnOrderNo:"رقم الطلب المرجعي (اختياري)", returnItems:"الأصناف المراد إرجاعها *", returnReason:"سبب الإرجاع *", returnNote:"ملاحظات إضافية (اختياري)", returnSend:"إرسال طلب الإرجاع", retAddItem:"إضافة الصنف للقائمة",
     whyEyebrow:"شريكك الموثوق في جيبوتي", whyTitle:"لماذا جريفن أفريقيا؟",
     why1:"تعامل مباشر وثقة", why1d:"علاقة شخصية مع كل عميل — كلمتنا التزام وبضاعتنا أصلية 100%",
     why2:"استيراد مباشر من المصانع", why2d:"وكلاء معتمدون لعلامات عالمية — أسعار جملة بلا وسطاء",
@@ -1539,7 +1560,7 @@ const I18N = {
     compatT:"Pour une meilleure expérience et pour commander, ouvrez le lien dans Chrome", compatOpen:"Ouvrir dans Chrome",
     gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer", payCash:"Comptant", payCredit:"Crédit", day:"j", callForPrice:"Prix sur demande",
     menuTitle:"Menu", mAbout:"Qui sommes-nous", mWhy:"Pourquoi Griffin ?", mSvc:"Services client", mBrands:"Marques & produits",
-    mCust:"Mon compte", mContact:"Contactez-nous", mChannel:"Chaîne des offres", mTerms:"Conditions", mAboutApp:"À propos", mAdmin:"Administration", contactTitle:"Contactez-nous", mReturn:"Demande de retour", returnIntro:"Remplissez les détails du retour, nous vous contacterons.", returnOrderNo:"N° commande réf. (optionnel)", returnItems:"Articles à retourner *", returnReason:"Motif du retour *", returnNote:"Notes (optionnel)", returnSend:"Envoyer la demande",
+    mCust:"Mon compte", mContact:"Contactez-nous", mChannel:"Chaîne des offres", mTerms:"Conditions", mAboutApp:"À propos", mAdmin:"Administration", contactTitle:"Contactez-nous", mReturn:"Demande de retour", returnIntro:"Remplissez les détails du retour, nous vous contacterons.", returnOrderNo:"N° commande réf. (optionnel)", returnItems:"Articles à retourner *", returnReason:"Motif du retour *", returnNote:"Notes (optionnel)", returnSend:"Envoyer la demande", retAddItem:"Ajouter à la liste",
     whyEyebrow:"Votre partenaire de confiance à Djibouti", whyTitle:"Pourquoi Griffin Africa ?",
     why1:"Relation directe et confiance", why1d:"Un contact personnel avec chaque client — produits 100% authentiques",
     why2:"Import direct des usines", why2d:"Distributeurs agréés de marques mondiales — prix de gros sans intermédiaires",
@@ -1583,7 +1604,7 @@ const I18N = {
     compatT:"For the best experience and to order, open this link in Chrome", compatOpen:"Open in Chrome",
     gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue", payCash:"Cash", payCredit:"Credit", day:"d", callForPrice:"Call for price",
     menuTitle:"Menu", mAbout:"About us", mWhy:"Why Griffin?", mSvc:"Customer services", mBrands:"Brands & products",
-    mCust:"My account", mContact:"Contact us", mChannel:"Offers channel", mTerms:"Terms", mAboutApp:"About", mAdmin:"Admin", contactTitle:"Contact us", mReturn:"Return request", returnIntro:"Fill in the return details and we will contact you.", returnOrderNo:"Ref order no. (optional)", returnItems:"Items to return *", returnReason:"Return reason *", returnNote:"Notes (optional)", returnSend:"Send return request",
+    mCust:"My account", mContact:"Contact us", mChannel:"Offers channel", mTerms:"Terms", mAboutApp:"About", mAdmin:"Admin", contactTitle:"Contact us", mReturn:"Return request", returnIntro:"Fill in the return details and we will contact you.", returnOrderNo:"Ref order no. (optional)", returnItems:"Items to return *", returnReason:"Return reason *", returnNote:"Notes (optional)", returnSend:"Send return request", retAddItem:"Add item to list",
     whyEyebrow:"Your trusted partner in Djibouti", whyTitle:"Why Griffin Africa?",
     why1:"Direct relationship & trust", why1d:"Personal contact with every client — 100% authentic goods",
     why2:"Direct factory imports", why2d:"Authorized distributors of global brands — wholesale prices, no middlemen",
@@ -1666,7 +1687,10 @@ function renderAnnounce(){
   if(show&&a.until){ const end=new Date(a.until+"T23:59:59"); if(!isNaN(end)&&Date.now()>end.getTime()) show=false; }
   if(!show){ el.innerHTML=""; el.style.display="none"; return; }
   el.style.display="block";
-  el.innerHTML=`<div class="announce"><span class="ann-ico">📢</span><span class="ann-txt">${esc(a.text.trim())}</span></div>`;
+  const p=a.productId?byId(a.productId):null;
+  el.innerHTML=`<div class="announce${p?" has-img":""}">
+    ${p?`<img class="ann-img" src="${p.img}" alt="">`:`<span class="ann-ico">📢</span>`}
+    <span class="ann-txt">${esc(a.text.trim())}</span></div>`;
   if(currentView==="brand"&&activeBrand) openBrand(activeBrand,true);
   if(currentView==="admin") renderAdmin();
   document.querySelectorAll(".curLabel,#curLabel").forEach(e=>e.textContent=CONFIG.currency);
@@ -2333,7 +2357,7 @@ function buildQuoteImage(){
     return {name:nm(p.name), tier:t[cc.tier], qty:cc.qty, price, line:price*cc.qty};
   }).filter(Boolean);
 
-  const W=1000, rowH=64, headH=330, letterH=170, custH=(c.name?70:0), footH=210, tableHead=56;
+  const W=1000, rowH=64, headH=330, letterH=170, custH=(c.name?112:70), footH=210, tableHead=56;
   const H=headH+letterH+custH+tableHead+rows.length*rowH+90+footH;
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   const x=cv.getContext("2d"); if(!x) throw new Error("no canvas");
@@ -2350,23 +2374,35 @@ function buildQuoteImage(){
   try{ if(_qLogo.complete&&_qLogo.width){ const lw=300, lh=lw*(_qLogo.height/_qLogo.width); x.drawImage(_qLogo,W/2-lw/2,14,lw,lh); } }catch(e){}
   x.textAlign="center";
   x.fillStyle="#a9c8e4"; x.font=F(19); x.fillText(L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti",W/2,headH-56);
-  x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText((L?"عرض سعر":"DEVIS / QUOTE")+"  ·  "+qno,W/2,headH-22);
+  x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText(L?"عرض سعر":"DEVIS / QUOTE",W/2,headH-22);
 
   // ══ شريط الترويسة الرسمية: عربي يمين · إنجليزي يسار ══
   drawLetterhead(x,W,headH,letterH);
 
   let y=headH+letterH+10;
-  // بيانات العميل
-  if(c.name){
-    x.fillStyle="#EDF5FA"; x.fillRect(30,y,W-60,54);
-    x.fillStyle="#0F3A52"; x.textAlign=L?"right":"left"; x.font=F(20,"bold");
-    const cust=(L?"العميل: ":"Client: ")+c.name+(c.shop?" — "+c.shop:"")+(c.phone?"  ·  \u202A"+c.phone+"\u202C":"")+(c.location?(L?"  ·  📍 ":"  ·  📍 ")+c.location:"");
-    x.fillText(AR(cust), L?W-50:50, y+27);
-    y+=custH;
+  // ══ صندوق: رقم العرض + التاريخ + بيانات العميل والعنوان ══
+  {
+    const boxH=c.name?98:56;
+    x.fillStyle="#EDF5FA"; x.fillRect(30,y,W-60,boxH);
+    x.fillStyle="#C89B4A"; x.fillRect(L?W-34:30,y,4,boxH);   // شريط ذهبي جانبي
+    // السطر 1: رقم العرض (يمين/يسار) + التاريخ (المقابل)
+    x.font=F(20,"bold"); x.fillStyle="#0F3A52"; x.textAlign=L?"right":"left";
+    x.fillText((L?"عرض سعر رقم: ":"Quote No: ")+qno, L?W-50:50, y+26);
+    x.font=F(17); x.fillStyle="#5b6f7d"; x.textAlign=L?"left":"right";
+    x.fillText(df(now), L?50:W-50, y+26);
+    if(c.name){
+      // السطر 2: العميل + المحل + الهاتف
+      x.font=F(19,"bold"); x.fillStyle="#0F3A52"; x.textAlign=L?"right":"left";
+      const l2=(L?"العميل: ":"Client: ")+c.name+(c.shop?" — "+c.shop:"")+(c.phone?"  ·  \u202A"+c.phone+"\u202C":"");
+      x.fillText(AR(l2), L?W-50:50, y+58);
+      // السطر 3: العنوان
+      if(c.location){
+        x.font=F(17); x.fillStyle="#4a5b6a";
+        x.fillText(AR("📍 "+(L?"العنوان: ":"Address: ")+c.location), L?W-50:50, y+84);
+      }
+    }
+    y+=boxH+14;
   }
-  // تاريخ
-  x.fillStyle="#5b6f7d"; x.font=F(19); x.textAlign=L?"left":"right";
-  x.fillText(df(now), L?50:W-50, y+16); y+=36;
 
   // رأس الجدول
   x.fillStyle="#0F3A52"; x.fillRect(30,y,W-60,tableHead);
@@ -2951,6 +2987,11 @@ function adminSettings(){
     <input class="inp" id="annText" value="${esc((CONFIG.announce||{}).text||"")}" placeholder="${L?"مثال: 🚚 وصل اليوم: حليب سعودية — كميات محدودة":"e.g. Arrived today: ..."}"></div>
   <div class="field"><label>${L?"ينتهي تلقائياً بتاريخ (اختياري)":"Auto-expire date (optional)"}</label>
     <input class="inp" id="annUntil" type="date" value="${esc((CONFIG.announce||{}).until||"")}" dir="ltr"></div>
+  <div class="field"><label>🖼️ ${L?"صورة صنف مرافقة (اختياري)":"Attach product image (optional)"}</label>
+    <select class="inp" id="annProd">
+      <option value="">${L?"— بلا صورة —":"— none —"}</option>
+      ${PRODUCTS.map(p=>`<option value="${p.id}" ${(CONFIG.announce||{}).productId===p.id?"selected":""}>${esc(nm(p.name))}</option>`).join("")}
+    </select></div>
   <button class="btn btn-primary btn-sm" onclick="saveAnnounce()">💾 ${L?"حفظ الإعلان":"Save announcement"}</button>
 
   <div class="hairline" style="margin:22px 0"></div>
@@ -3012,6 +3053,7 @@ function saveAnnounce(){
     active:document.getElementById("annActive").checked,
     text:document.getElementById("annText").value.trim(),
     until:document.getElementById("annUntil").value||"",
+    productId:(document.getElementById("annProd")||{}).value||"",
   };
   saveConfig(); schedulePublish(); renderAnnounce();
   toast(lang==="ar"?"حُفظ الإعلان ✓":"Announcement saved ✓","ok");
@@ -3023,16 +3065,54 @@ function toggleHidePrices(on){
   toast(lang==="ar"?(on?"الأسعار مخفية — يظهر «اتصل للسعر»":"عادت الأسعار"):(on?"Prices hidden":"Prices shown"),"ok");
 }
 /* ══ طلب إرجاع بضاعة (طلب عكسي من العميل) ══ */
+let _retItems=[];
 function openReturn(){ closeMenu();
-  const c=getCustomer()||{};
-  ["retOrderNo","retItems","retNote"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  _retItems=[];
+  ["retOrderNo","retNote"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  const q=document.getElementById("retQty"); if(q)q.value=1;
+  const ex=document.getElementById("retExpiry"); if(ex)ex.value="";
+  // املأ العلامات
+  const bs=document.getElementById("retBrandSel");
+  if(bs){
+    bs.innerHTML=BRANDS.map(b=>`<option value="${b.id}">${esc(nm(b.name))}</option>`).join("");
+    fillRetProducts();
+  }
+  renderRetList();
   document.getElementById("returnBackdrop").classList.add("open");
   document.getElementById("returnSheet").classList.add("open");
 }
+function fillRetProducts(){
+  const bid=document.getElementById("retBrandSel").value;
+  const ps=PRODUCTS.filter(p=>p.brand===bid);
+  const sel=document.getElementById("retProdSel");
+  sel.innerHTML=ps.length?ps.map(p=>`<option value="${p.id}">${esc(nm(p.name))}</option>`).join("")
+    :`<option value="">${lang==="ar"?"لا أصناف":"No items"}</option>`;
+}
+function addRetItem(){
+  const pid=document.getElementById("retProdSel").value;
+  const p=byId(pid); if(!p){ toast(lang==="ar"?"اختر صنفاً":"Choose an item","err"); return; }
+  const qty=Math.max(1,parseInt(document.getElementById("retQty").value)||1);
+  const expiry=document.getElementById("retExpiry").value||"";
+  _retItems.push({id:pid,name:nm(p.name),qty,expiry});
+  document.getElementById("retQty").value=1;
+  document.getElementById("retExpiry").value="";
+  renderRetList();
+  toast(lang==="ar"?"أُضيف للقائمة ✓":"Added ✓","ok");
+}
+function removeRetItem(i){ _retItems.splice(i,1); renderRetList(); }
+function renderRetList(){
+  const el=document.getElementById("retList"); if(!el)return;
+  const L=lang==="ar";
+  if(!_retItems.length){ el.innerHTML=`<div class="ret-empty">${L?"لم تُضف أصنافاً بعد":"No items added yet"}</div>`; return; }
+  el.innerHTML=_retItems.map((it,i)=>`<div class="ret-row">
+    <div style="flex:1"><b>${esc(it.name)}</b>
+      <div class="ret-meta">${L?"الكمية":"Qty"}: ${it.qty}${it.expiry?` · ${L?"الصلاحية":"Exp"}: ${it.expiry}`:""}</div></div>
+    <button class="mini-btn del" onclick="removeRetItem(${i})">🗑</button>
+  </div>`).join("");
+}
 function closeReturn(){ document.getElementById("returnBackdrop").classList.remove("open"); document.getElementById("returnSheet").classList.remove("open"); }
 function submitReturn(){
-  const items=document.getElementById("retItems").value.trim();
-  if(!items){ toast(lang==="ar"?"حدّد الأصناف المراد إرجاعها":"Specify items to return","err"); return; }
+  if(!_retItems.length){ toast(lang==="ar"?"أضف صنفاً واحداً على الأقل":"Add at least one item","err"); return; }
   requireCustomer(()=>{
     const c=getCustomer()||{};
     const L=lang==="ar";
@@ -3049,19 +3129,22 @@ function submitReturn(){
     if(orderNo) lines.push(`🧾 ${L?"طلب مرجعي":"Ref order"}: ${orderNo}`);
     lines.push("");
     lines.push(`📦 ${L?"الأصناف":"Items"}:`);
-    lines.push(items);
+    _retItems.forEach((it,i)=>{
+      lines.push(`${i+1}. ${it.name} — ${L?"الكمية":"Qty"}: ${it.qty}${it.expiry?` · ${L?"الصلاحية":"Exp"}: ${it.expiry}`:""}`);
+    });
     lines.push("");
     lines.push(`❓ ${L?"السبب":"Reason"}: ${reason}`);
     if(note) lines.push(`📝 ${L?"ملاحظات":"Notes"}: ${note}`);
-    // احفظ سجلاً محلياً وسحابياً
+    lines.push("");
+    lines.push(`📷 ${L?"سأرفق صور البضاعة في هذه المحادثة":"I will attach photos here"}`);
     const rec={num:rno,_cid:Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8),ts:Date.now(),
       type:"return",cust:{name:c.name||"",phone:c.phone||"",shop:c.shop||"",location:c.location||""},
-      orderNo,items,reason,note,status:"pending"};
+      orderNo,items:_retItems.slice(),reason,note,status:"pending"};
     const rets=DB.get("returns",[]); rets.push(rec); DB.set("returns",rets.slice(-200));
     if(FB.ready) pushWithRetry("returns",rec._cid,rec);
     closeReturn();
     window.open(`https://wa.me/${waNum(CONFIG.whatsappNumber)}?text=${encodeURIComponent(lines.join("\n"))}`,"_blank");
-    toast(L?"تم إرسال طلب الإرجاع ✓":"Return request sent ✓","ok");
+    setTimeout(()=>toast(L?"📷 أرفق صور البضاعة في محادثة واتساب":"📷 Attach photos in WhatsApp","ok"),900);
   });
 }
 function saveTerms(){
