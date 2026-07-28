@@ -1013,7 +1013,7 @@ const DEFAULTS = {
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v23";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v24";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 
 /* ══════════════════════════════════════════════════════════
    🗄️ طبقة التخزين المحلي (مع احتياطي في الذاكرة)
@@ -1834,23 +1834,28 @@ function clearSearch(){ document.getElementById("searchInput").value=""; documen
 /* ══════════════════════════════════════════════════════════
    🛒 السلة والأسعار
    ══════════════════════════════════════════════════════════ */
-function currentQty(id){ const el=document.getElementById("qty-"+id); return Math.max(1,parseInt(el&&el.value)||1); }
-function stepQty(id,d){ const el=document.getElementById("qty-"+id); el.value=Math.max(1,currentQty(id)+d); autoTier(id); if(cart[id])syncQty(id); }
-function qtyInput(id,v){ const el=document.getElementById("qty-"+id); el.value=Math.max(1,parseInt(v)||1); autoTier(id); if(cart[id])syncQty(id); }
+function currentQty(id){ const el=qtyEl(id); return Math.max(1,parseInt(el&&el.value)||1); }
+function stepQty(id,d){ const el=qtyEl(id); if(!el)return; el.value=Math.max(1,currentQty(id)+d); autoTier(id); if(cart[id])syncQty(id); }
+function qtyInput(id,v){ const el=qtyEl(id); if(!el)return; el.value=Math.max(1,parseInt(v)||1); autoTier(id); if(cart[id])syncQty(id); }
 function autoTier(id){
   const p=byId(id); if(!p||cart[id]&&cart[id].manual)return;
   const target=currentQty(id)>=thresholdOf(p)?"wholesale":"retail";
   if(cart[id])cart[id].tier=target;
   paintTier(id,target);
 }
-function tierOnCard(id){ const c=document.getElementById("card-"+id); return c&&c.querySelectorAll(".price-opt")[1].classList.contains("active")?"wholesale":"retail"; }
-function paintTier(id,tier){ const opts=document.getElementById("card-"+id); if(!opts)return; const o=opts.querySelectorAll(".price-opt"); o[0].classList.toggle("active",tier==="retail"); o[1].classList.toggle("active",tier==="wholesale"); }
+function tierOnCard(id){ const c=cardEl(id); return c&&c.querySelectorAll(".price-opt")[1].classList.contains("active")?"wholesale":"retail"; }
+/* ابحث ضمن العرض النشط فقط — يمنع تعارض المعرّفات المكررة بين الرئيسية وصفحة العلامة */
+function activeView(){ return document.querySelector(".view.active")||document; }
+function cardEl(id){ const v=activeView(); return (v.querySelector&&v.querySelector('[id="card-'+id+'"]'))||document.getElementById("card-"+id); }
+function qtyEl(id){ const v=activeView(); return (v.querySelector&&v.querySelector('[id="qty-'+id+'"]'))||document.getElementById("qty-"+id); }
+function addBtnEl(id){ const v=activeView(); return (v.querySelector&&v.querySelector('[id="add-'+id+'"]'))||document.getElementById("add-"+id); }
+function paintTier(id,tier){ const opts=cardEl(id); if(!opts)return; const o=opts.querySelectorAll(".price-opt"); o[0].classList.toggle("active",tier==="retail"); o[1].classList.toggle("active",tier==="wholesale"); }
 function setTier(id,tier){ paintTier(id,tier); if(cart[id]){cart[id].tier=tier;cart[id].manual=true;persistCart();renderCart();} }
 function addToCart(id){
   if(hasFlag(id,"out")){ toast(lang==="ar"?"هذا الصنف غير متوفر حالياً":"Currently unavailable","err"); return; }
   cart[id]={qty:currentQty(id),tier:tierOnCard(id),manual:cart[id]&&cart[id].manual||false};
   persistCart();
-  const btn=document.getElementById("add-"+id); if(btn){btn.classList.add("added");btn.innerHTML="✓ "+T().added;}
+  const btn=addBtnEl(id); if(btn){btn.classList.add("added");btn.innerHTML="✓ "+T().added;}
   toast(T().added,"ok"); renderCart();
 }
 function syncQty(id){ cart[id].qty=currentQty(id); persistCart(); renderCart(); }
