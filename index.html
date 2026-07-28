@@ -9,13 +9,13 @@
 <meta property="og:site_name" content="Griffin Africa">
 <meta property="og:title" content="جريفن كاتالوج | Griffin Catalog">
 <meta property="og:description" content="علامات عالمية بأسعار الجملة والتجزئة — تصفّح الأصناف واطلب مباشرة عبر واتساب. Import · Wholesale · Distribution — Djibouti.">
-<meta property="og:url" content="https://griffinafrica2020-calc.github.io/griffin-catalog/">
-<meta property="og:image" content="https://griffinafrica2020-calc.github.io/griffin-catalog/icon-512.png">
+<meta property="og:url" content="https://griffin-africa.com/">
+<meta property="og:image" content="https://griffin-africa.com/icon-512.png">
 <meta property="og:locale" content="ar_AR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="جريفن كاتالوج | Griffin Catalog">
 <meta name="twitter:description" content="علامات عالمية بأسعار الجملة والتجزئة، طلب مباشر عبر واتساب.">
-<meta name="twitter:image" content="https://griffinafrica2020-calc.github.io/griffin-catalog/icon-512.png">
+<meta name="twitter:image" content="https://griffin-africa.com/icon-512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="جريفن كاتالوج">
@@ -633,6 +633,17 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .pay-opt.on{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 12px rgba(15,58,82,.25)}
 .pay-opt.on b{color:#7BE3A4!important}
 .pay-opt:active{transform:scale(.97)}
+.call-price{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:14px;border-radius:12px;background:linear-gradient(135deg,#0a4a8f,#032b60);color:#fff;font-weight:800;font-size:14px;text-decoration:none;border:none}
+.call-price:active{transform:scale(.98)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--tint-2);border-radius:12px;font-size:13.5px;font-weight:600;color:var(--navy);cursor:pointer}
+.toggle-row input{width:20px;height:20px;accent-color:var(--navy);flex-shrink:0}
+/* شريط الإعلان */
+#announceBar{margin:0 0 14px}
+.announce{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#C89B4A,#A9782F);color:#fff;
+  padding:12px 16px;border-radius:14px;font-size:13.5px;font-weight:700;box-shadow:0 4px 14px rgba(168,120,47,.28);animation:annIn .4s ease}
+.announce .ann-ico{font-size:19px;flex-shrink:0}
+.announce .ann-txt{line-height:1.5}
+@keyframes annIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 /* تواصل معنا */
 .contact-wrap{padding:16px 18px}
 .contact-main{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,#0a4a8f,#032b60);color:#fff;border-radius:16px;padding:16px;text-decoration:none;margin-bottom:16px}
@@ -642,6 +653,8 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .rep-photo{width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--tint);display:grid;place-items:center;font-size:22px;flex-shrink:0}
 .rep-photo img{width:100%;height:100%;object-fit:cover}
 .rep-info{flex:1}.rep-name{font-weight:700;font-size:14px;color:var(--navy)}.rep-phone{font-size:12px;color:var(--silver)}
+.rep-role{font-size:11.5px;color:var(--sky);font-weight:700;margin:1px 0}
+.rep-extra{font-size:11px;color:var(--silver-2);margin-top:2px}
 .rep-wa{font-size:22px}
 .chan-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .chan-btn{display:flex;align-items:center;gap:9px;padding:13px;border-radius:13px;background:var(--card);border:1.5px solid var(--line);border-inline-start:4px solid var(--cc,var(--sky));text-decoration:none;color:var(--ink);font-weight:700;font-size:13px}
@@ -775,6 +788,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 <main>
   <!-- ══ الرئيسية: تعريف + علامات ══ -->
   <div class="view active" id="homeView">
+    <div id="announceBar"></div>
     <div id="merchOffers"></div>
     <div class="section-head">
       <div class="eyebrow-2" data-i18n="portfolio">محفظة العلامات</div>
@@ -934,6 +948,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   <button class="dr-item" onclick="openContact()"><span>📞</span><b data-i18n="mContact">تواصل معنا</b></button>
   <a class="dr-item" id="menuChannel" href="#" target="_blank" rel="noopener"><span>📢</span><b data-i18n="mChannel">قناة العروض</b></a>
   <button class="dr-item" onclick="openTerms()"><span>📄</span><b data-i18n="mTerms">الشروط والأحكام</b></button>
+  <button class="dr-item" onclick="openReturn()"><span>↩️</span><b data-i18n="mReturn">طلب إرجاع بضاعة</b></button>
   <button class="dr-item" onclick="openAbout()"><span>ℹ️</span><b data-i18n="mAboutApp">حول التطبيق</b></button>
   <div class="dr-sep"></div>
   <button class="dr-item dr-admin" onclick="closeMenu();goAdmin()"><span>⚙️</span><b data-i18n="mAdmin">لوحة المدير</b></button>
@@ -961,6 +976,30 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   <div class="grip"></div>
   <div class="sheet-head"><h2 data-i18n="mAboutApp">حول التطبيق</h2><button class="close" onclick="closeAbout()">✕</button></div>
   <div class="sheet-body" id="aboutBody"></div>
+</div>
+
+<!-- ══ طلب إرجاع بضاعة ══ -->
+<div class="backdrop" id="returnBackdrop" onclick="closeReturn()"></div>
+<div class="sheet" id="returnSheet">
+  <div class="grip"></div>
+  <div class="sheet-head"><h2 data-i18n="mReturn">طلب إرجاع بضاعة</h2><button class="close" onclick="closeReturn()">✕</button></div>
+  <div class="sheet-body" style="padding:16px 18px">
+    <p style="font-size:12.5px;color:var(--silver);line-height:1.7;margin-bottom:14px" data-i18n="returnIntro">املأ بيانات الإرجاع وسنتواصل معك. تُرفق بياناتك تلقائياً.</p>
+    <div class="field"><label data-i18n="returnOrderNo">رقم الطلب المرجعي (اختياري)</label><input class="inp" id="retOrderNo" placeholder="GA-..." dir="ltr"></div>
+    <div class="field"><label data-i18n="returnItems">الأصناف المراد إرجاعها *</label><textarea class="inp" id="retItems" rows="3" style="height:auto;min-height:70px" placeholder="—"></textarea></div>
+    <div class="field"><label data-i18n="returnReason">سبب الإرجاع *</label>
+      <select class="inp" id="retReason">
+        <option value="تالف / منتهي" data-i18n="retR1">تالف / منتهي الصلاحية</option>
+        <option value="صنف خاطئ" data-i18n="retR2">صنف خاطئ</option>
+        <option value="كمية زائدة" data-i18n="retR3">كمية زائدة</option>
+        <option value="غير مطابق" data-i18n="retR4">غير مطابق للطلب</option>
+        <option value="أخرى" data-i18n="retR5">أخرى</option>
+      </select></div>
+    <div class="field"><label data-i18n="returnNote">ملاحظات إضافية (اختياري)</label><textarea class="inp" id="retNote" rows="2" style="height:auto;min-height:50px" placeholder="—"></textarea></div>
+  </div>
+  <div class="sheet-foot" style="background:var(--card);border-top:1px solid var(--line)">
+    <button class="act wa" onclick="submitReturn()">💬 <span data-i18n="returnSend">إرسال طلب الإرجاع</span></button>
+  </div>
 </div>
 <button class="to-top" id="toTop" onclick="scrollTop()" aria-label="العودة إلى الأعلى"><span aria-hidden="true">↑</span></button>
 <div class="lightbox" id="lightbox" onclick="closeLightbox()" role="dialog" aria-label="عرض مكبّر للصنف">
@@ -1010,10 +1049,23 @@ const DEFAULTS = {
   reps: [],                       // مندوبو المبيعات: [{name,phone,photo}]
   channels: { whatsapp:"", tiktok:"", youtube:"", facebook:"" },
   appVersion: "2.2",              // رقم النسخة الظاهر في "حول التطبيق"
+  hidePrices: false,              // إخفاء كل الأسعار وإظهار "اتصل للسعر"
+  announce: { text:"", active:false, until:"" },   // شريط إعلان (على وشك الوصول/وصل اليوم...)
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v24";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v25";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+/* بيانات الترويسة الرسمية (ثابتة في المستندات) */
+const COMPANY = {
+  ar:{ name:"شركة جريفن أفريقيا", branch:"فرع جيبوتي",
+       addr1:"جيبوتي ٥ عمارة رقم ١٤٤", addr2:"شقة بي 6",
+       telLabel:"تلفون:" },
+  en:{ name:"Griffin Africa Company", branch:"Djibouti Branch",
+       addr1:"Gabode 5 lot STID-N 144", addr2:"Appartement B-6",
+       telLabel:"Tele No:" },
+  phones:["+25377015532","+25377545042"],
+  email:"Info@griffintrades.com",
+};
 
 /* ══════════════════════════════════════════════════════════
    🗄️ طبقة التخزين المحلي (مع احتياطي في الذاكرة)
@@ -1238,7 +1290,7 @@ function cloudListenOwner(){
 
 
 /* تنظيف رقم الهاتف لصيغة wa.me */
-function waNum(s){ return String(s||"").replace(/[^\d]/g,""); }
+function waNum(s){ let d=String(s||"").replace(/[^\d]/g,""); if(d.slice(0,2)==="00") d=d.slice(2); return d; }
 /* حماية: تهريب نص المستخدم قبل عرضه (ضد XSS) */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -1252,13 +1304,18 @@ if(DB.get("configV",1) < 2){
   CONFIG.channelUrl     = DEFAULTS.channelUrl;
   DB.set("configV",2); saveConfig();
 }
+/* ترقية v3: تحديث رقم النسخة التجاري لـ2.2 (كان عالقاً على 2.1 بالسحابة) */
+if(DB.get("configV",1) < 3){
+  CONFIG.appVersion = "2.2";
+  DB.set("configV",3); saveConfig();
+}
 function saveConfig(){ DB.set("config", {
   whatsappNumber:CONFIG.whatsappNumber, phoneNumber:CONFIG.phoneNumber, channelUrl:CONFIG.channelUrl,
   currency:CONFIG.currency, wholesaleThreshold:CONFIG.wholesaleThreshold,
   quoteValidityDays:CONFIG.quoteValidityDays, address:CONFIG.address,
   creditDays:CONFIG.creditDays, cashDiscount:CONFIG.cashDiscount,
   terms:CONFIG.terms, returnPolicy:CONFIG.returnPolicy,
-  reps:CONFIG.reps, channels:CONFIG.channels, appVersion:CONFIG.appVersion }); }
+  reps:CONFIG.reps, channels:CONFIG.channels, appVersion:CONFIG.appVersion, hidePrices:CONFIG.hidePrices, announce:CONFIG.announce }); }
 
 /* ══════════════════════════════════════════════════════════
    🖼️ الصور المضمّنة (شعارات + أصناف)
@@ -1436,9 +1493,9 @@ const I18N = {
     svcEyebrow:"نحن في خدمتك", svcTitle:"خدمات العملاء",
     updateReady:"يتوفّر تحديث جديد للتطبيق", updateNow:"تحديث الآن",
     compatT:"لأفضل تجربة وللطلب بسهولة، افتح الرابط في متصفح Chrome", compatOpen:"افتح في Chrome",
-    gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة", payCash:"نقدي", payCredit:"آجل", day:"يوم",
+    gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة", payCash:"نقدي", payCredit:"آجل", day:"يوم", callForPrice:"اتصل للسعر",
     menuTitle:"القائمة", mAbout:"من نحن", mWhy:"لماذا جريفن؟", mSvc:"خدمات العملاء", mBrands:"العلامات والأصناف",
-    mCust:"تسجيل / بياناتي", mContact:"تواصل معنا", mChannel:"قناة العروض", mTerms:"الشروط والأحكام", mAboutApp:"حول التطبيق", mAdmin:"لوحة المدير", contactTitle:"تواصل معنا",
+    mCust:"تسجيل / بياناتي", mContact:"تواصل معنا", mChannel:"قناة العروض", mTerms:"الشروط والأحكام", mAboutApp:"حول التطبيق", mAdmin:"لوحة المدير", contactTitle:"تواصل معنا", mReturn:"طلب إرجاع بضاعة", returnIntro:"املأ بيانات الإرجاع وسنتواصل معك. تُرفق بياناتك تلقائياً.", returnOrderNo:"رقم الطلب المرجعي (اختياري)", returnItems:"الأصناف المراد إرجاعها *", returnReason:"سبب الإرجاع *", returnNote:"ملاحظات إضافية (اختياري)", returnSend:"إرسال طلب الإرجاع",
     whyEyebrow:"شريكك الموثوق في جيبوتي", whyTitle:"لماذا جريفن أفريقيا؟",
     why1:"تعامل مباشر وثقة", why1d:"علاقة شخصية مع كل عميل — كلمتنا التزام وبضاعتنا أصلية 100%",
     why2:"استيراد مباشر من المصانع", why2d:"وكلاء معتمدون لعلامات عالمية — أسعار جملة بلا وسطاء",
@@ -1480,9 +1537,9 @@ const I18N = {
     svcEyebrow:"À votre service", svcTitle:"Services client",
     updateReady:"Une nouvelle version est disponible", updateNow:"Mettre à jour",
     compatT:"Pour une meilleure expérience et pour commander, ouvrez le lien dans Chrome", compatOpen:"Ouvrir dans Chrome",
-    gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer", payCash:"Comptant", payCredit:"Crédit", day:"j",
+    gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer", payCash:"Comptant", payCredit:"Crédit", day:"j", callForPrice:"Prix sur demande",
     menuTitle:"Menu", mAbout:"Qui sommes-nous", mWhy:"Pourquoi Griffin ?", mSvc:"Services client", mBrands:"Marques & produits",
-    mCust:"Mon compte", mContact:"Contactez-nous", mChannel:"Chaîne des offres", mTerms:"Conditions", mAboutApp:"À propos", mAdmin:"Administration", contactTitle:"Contactez-nous",
+    mCust:"Mon compte", mContact:"Contactez-nous", mChannel:"Chaîne des offres", mTerms:"Conditions", mAboutApp:"À propos", mAdmin:"Administration", contactTitle:"Contactez-nous", mReturn:"Demande de retour", returnIntro:"Remplissez les détails du retour, nous vous contacterons.", returnOrderNo:"N° commande réf. (optionnel)", returnItems:"Articles à retourner *", returnReason:"Motif du retour *", returnNote:"Notes (optionnel)", returnSend:"Envoyer la demande",
     whyEyebrow:"Votre partenaire de confiance à Djibouti", whyTitle:"Pourquoi Griffin Africa ?",
     why1:"Relation directe et confiance", why1d:"Un contact personnel avec chaque client — produits 100% authentiques",
     why2:"Import direct des usines", why2d:"Distributeurs agréés de marques mondiales — prix de gros sans intermédiaires",
@@ -1524,9 +1581,9 @@ const I18N = {
     svcEyebrow:"At your service", svcTitle:"Customer Services",
     updateReady:"A new version is available", updateNow:"Update now",
     compatT:"For the best experience and to order, open this link in Chrome", compatOpen:"Open in Chrome",
-    gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue", payCash:"Cash", payCredit:"Credit", day:"d",
+    gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue", payCash:"Cash", payCredit:"Credit", day:"d", callForPrice:"Call for price",
     menuTitle:"Menu", mAbout:"About us", mWhy:"Why Griffin?", mSvc:"Customer services", mBrands:"Brands & products",
-    mCust:"My account", mContact:"Contact us", mChannel:"Offers channel", mTerms:"Terms", mAboutApp:"About", mAdmin:"Admin", contactTitle:"Contact us",
+    mCust:"My account", mContact:"Contact us", mChannel:"Offers channel", mTerms:"Terms", mAboutApp:"About", mAdmin:"Admin", contactTitle:"Contact us", mReturn:"Return request", returnIntro:"Fill in the return details and we will contact you.", returnOrderNo:"Ref order no. (optional)", returnItems:"Items to return *", returnReason:"Return reason *", returnNote:"Notes (optional)", returnSend:"Send return request",
     whyEyebrow:"Your trusted partner in Djibouti", whyTitle:"Why Griffin Africa?",
     why1:"Direct relationship & trust", why1d:"Personal contact with every client — 100% authentic goods",
     why2:"Direct factory imports", why2d:"Authorized distributors of global brands — wholesale prices, no middlemen",
@@ -1598,7 +1655,18 @@ function applyLang(){
   if(noteEl){ noteEl.placeholder = lang==="ar"?"📝 ملاحظة على الطلب (اختياري)...":lang==="fr"?"📝 Note sur la commande (facultatif)...":"📝 Order note (optional)..."; noteEl.value=DB.get("orderNote",""); }
   document.getElementById("aboutTitle").textContent=t.aboutTitle;
   document.getElementById("aboutText").textContent=t.aboutText;
-  renderAbout(); renderServices(); renderWhy(); renderMerch(); renderCatFilter(); renderBrands(); renderCart(); renderCustBadge();
+  renderAbout(); renderServices(); renderWhy(); renderMerch(); renderCatFilter(); renderBrands(); renderCart(); renderCustBadge(); renderAnnounce();
+}
+/* ══ شريط الإعلان (وصل اليوم / على وشك الوصول...) ══ */
+function renderAnnounce(){
+  const el=document.getElementById("announceBar"); if(!el)return;
+  const a=CONFIG.announce||{};
+  let show=a.active&&a.text&&a.text.trim();
+  // انتهاء الصلاحية التلقائي
+  if(show&&a.until){ const end=new Date(a.until+"T23:59:59"); if(!isNaN(end)&&Date.now()>end.getTime()) show=false; }
+  if(!show){ el.innerHTML=""; el.style.display="none"; return; }
+  el.style.display="block";
+  el.innerHTML=`<div class="announce"><span class="ann-ico">📢</span><span class="ann-txt">${esc(a.text.trim())}</span></div>`;
   if(currentView==="brand"&&activeBrand) openBrand(activeBrand,true);
   if(currentView==="admin") renderAdmin();
   document.querySelectorAll(".curLabel,#curLabel").forEach(e=>e.textContent=CONFIG.currency);
@@ -1740,6 +1808,9 @@ function productCard(p){
         ${packTxt?`<span class="spec grey">📦 ${esc(packTxt)}</span>`:""}
       </div>
       <div class="price-block">
+        ${CONFIG.hidePrices ? `
+        <a class="call-price" href="https://wa.me/${waNum(CONFIG.whatsappNumber)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📞 ${t.callForPrice}</a>
+        ` : `
         <button class="price-opt ${tier==='retail'?'active':''}" onclick="setTier('${p.id}','retail')">
           <div class="plabel">${t.retail}</div>
           <div class="pval">${fmt(p.priceRetail)}</div><div class="pcur">${CONFIG.currency}</div>
@@ -1748,8 +1819,9 @@ function productCard(p){
           <div class="plabel">${t.wholesale}</div>
           <div class="pval">${fmt(p.priceWholesale)}</div><div class="pcur">${CONFIG.currency}</div>
         </button>
+        `}
       </div>
-      <div class="auto-hint">↳ ${t.autoHint} <b>${thresholdOf(p)}</b> ${t.unit}</div>
+      ${CONFIG.hidePrices?"":`<div class="auto-hint">↳ ${t.autoHint} <b>${thresholdOf(p)}</b> ${t.unit}</div>`}
       <div class="card-actions">
         <div class="qty">
           <button onclick="stepQty('${p.id}',-1)">−</button>
@@ -1843,13 +1915,13 @@ function autoTier(id){
   if(cart[id])cart[id].tier=target;
   paintTier(id,target);
 }
-function tierOnCard(id){ const c=cardEl(id); return c&&c.querySelectorAll(".price-opt")[1].classList.contains("active")?"wholesale":"retail"; }
+function tierOnCard(id){ const c=cardEl(id); if(!c)return "retail"; const o=c.querySelectorAll(".price-opt"); return (o[1]&&o[1].classList.contains("active"))?"wholesale":"retail"; }
 /* ابحث ضمن العرض النشط فقط — يمنع تعارض المعرّفات المكررة بين الرئيسية وصفحة العلامة */
 function activeView(){ return document.querySelector(".view.active")||document; }
 function cardEl(id){ const v=activeView(); return (v.querySelector&&v.querySelector('[id="card-'+id+'"]'))||document.getElementById("card-"+id); }
 function qtyEl(id){ const v=activeView(); return (v.querySelector&&v.querySelector('[id="qty-'+id+'"]'))||document.getElementById("qty-"+id); }
 function addBtnEl(id){ const v=activeView(); return (v.querySelector&&v.querySelector('[id="add-'+id+'"]'))||document.getElementById("add-"+id); }
-function paintTier(id,tier){ const opts=cardEl(id); if(!opts)return; const o=opts.querySelectorAll(".price-opt"); o[0].classList.toggle("active",tier==="retail"); o[1].classList.toggle("active",tier==="wholesale"); }
+function paintTier(id,tier){ const opts=cardEl(id); if(!opts)return; const o=opts.querySelectorAll(".price-opt"); if(!o[0]||!o[1])return; o[0].classList.toggle("active",tier==="retail"); o[1].classList.toggle("active",tier==="wholesale"); }
 function setTier(id,tier){ paintTier(id,tier); if(cart[id]){cart[id].tier=tier;cart[id].manual=true;persistCart();renderCart();} }
 function addToCart(id){
   if(hasFlag(id,"out")){ toast(lang==="ar"?"هذا الصنف غير متوفر حالياً":"Currently unavailable","err"); return; }
@@ -2099,12 +2171,27 @@ function orderLines(){
   const t=T(),entries=Object.entries(cart),lines=[];
   const c=getCustomer();
   lines.push(t.waIntro,"");
-  if(c&&c.name){ lines.push(`👤 ${t.waCust}: ${c.name}${c.shop?" — "+c.shop:""}${c.location?" ("+c.location+")":""} | ${c.phone||""}`,""); }
+  if(c&&c.name){
+    lines.push(`👤 ${t.waCust}: ${c.name}${c.shop?" — "+c.shop:""} | ${c.phone||""}`);
+    if(c.location) lines.push(`📍 ${lang==="ar"?"العنوان":lang==="fr"?"Adresse":"Address"}: ${c.location}`);
+    lines.push("");
+  }
   entries.forEach(([id,cc],i)=>{
     const p=byId(id); if(!p)return;
-    const price=cc.tier==="wholesale"?p.priceWholesale:p.priceRetail;
-    lines.push(`${i+1}. ${nm(p.name)} — ${cc.qty} × ${fmt(price)} = ${fmt(price*cc.qty)} ${CONFIG.currency} (${t.waTier[cc.tier]})`);
+    if(CONFIG.hidePrices){
+      lines.push(`${i+1}. ${nm(p.name)} — ${cc.qty} ${t.unit}`);
+    }else{
+      const price=cc.tier==="wholesale"?p.priceWholesale:p.priceRetail;
+      lines.push(`${i+1}. ${nm(p.name)} — ${cc.qty} × ${fmt(price)} = ${fmt(price*cc.qty)} ${CONFIG.currency} (${t.waTier[cc.tier]})`);
+    }
   });
+  // عند إخفاء الأسعار: اطلب التسعير عند التواصل ثم أنهِ
+  if(CONFIG.hidePrices){
+    const note0=(DB.get("orderNote","")||"").trim();
+    if(note0) lines.push("",`📝 ${lang==="ar"?"ملاحظة":lang==="fr"?"Note":"Note"}: ${note0}`);
+    lines.push("",`📞 ${lang==="ar"?"يرجى تزويدي بالأسعار":lang==="fr"?"Merci de m'indiquer les prix":"Please send me the prices"}`);
+    return lines.join("\n");
+  }
   const {total}=totals();
   const disc=Math.round(total*cashDiscountRate());
   const net=total-disc;
@@ -2207,6 +2294,32 @@ function fmtPhonePro(p){
   if(d.startsWith("253")&&d.length===11) return "+253 "+d.slice(3).replace(/(\d{2})(?=\d)/g,"$1 ");
   return "+"+d.replace(/(\d{3})(\d{2})(?=\d)/, "$1 $2 ").replace(/(\d{2})(?=\d\d)/g,"$1 ");
 }
+/* رسم شريط الترويسة الرسمية على canvas: عربي يمين · إنجليزي يسار */
+function drawLetterhead(x,W,top,h){
+  const F=(sz,w)=> (w||"")+" "+sz+"px 'Segoe UI','Noto Sans Arabic',Tahoma,sans-serif";
+  // خلفية فاتحة + خط ذهبي علوي
+  x.fillStyle="#F7FAFC"; x.fillRect(0,top,W,h);
+  x.fillStyle="#C89B4A"; x.fillRect(0,top,W,4);
+  const pad=44, midY=top+18;
+  const ar=COMPANY.ar, en=COMPANY.en;
+  // العربية (يمين)
+  x.textAlign="right"; let ry=top+30;
+  x.fillStyle="#0b2e52"; x.font=F(23,"bold"); x.fillText(ar.name,W-pad,ry); ry+=30;
+  x.fillStyle="#1a4971"; x.font=F(18,"bold"); x.fillText(ar.branch,W-pad,ry); ry+=28;
+  x.fillStyle="#4a5b6a"; x.font=F(15); x.fillText(ar.addr1+" "+ar.addr2,W-pad,ry); ry+=25;
+  x.fillStyle="#0b2e52"; x.font=F(15);
+  COMPANY.phones.forEach(p=>{ x.fillText("\u202A"+p+"\u202C  :"+ar.telLabel.replace(":",""),W-pad,ry); ry+=22; });
+  // الإنجليزية (يسار)
+  x.textAlign="left"; let ey=top+30;
+  x.fillStyle="#0b2e52"; x.font=F(23,"bold"); x.fillText(en.name,pad,ey); ey+=30;
+  x.fillStyle="#1a4971"; x.font=F(18,"bold"); x.fillText(en.branch,pad,ey); ey+=28;
+  x.fillStyle="#4a5b6a"; x.font=F(15); x.fillText(en.addr1+" "+en.addr2,pad,ey); ey+=25;
+  x.fillStyle="#0b2e52"; x.font=F(15);
+  COMPANY.phones.forEach(p=>{ x.fillText(en.telLabel+" "+p,pad,ey); ey+=22; });
+  // البريد (وسط أسفل الشريط)
+  x.textAlign="center"; x.fillStyle="#0b6b3a"; x.font=F(15,"bold");
+  x.fillText("📧 "+COMPANY.email,W/2,top+h-16);
+}
 function buildQuoteImage(){
   const t=T(), entries=Object.entries(cart);
   const L=lang==="ar", now=new Date();
@@ -2220,8 +2333,8 @@ function buildQuoteImage(){
     return {name:nm(p.name), tier:t[cc.tier], qty:cc.qty, price, line:price*cc.qty};
   }).filter(Boolean);
 
-  const W=1000, rowH=64, headH=330, custH=(c.name?70:0), footH=210, tableHead=56;
-  const H=headH+custH+tableHead+rows.length*rowH+90+footH;
+  const W=1000, rowH=64, headH=330, letterH=170, custH=(c.name?70:0), footH=210, tableHead=56;
+  const H=headH+letterH+custH+tableHead+rows.length*rowH+90+footH;
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   const x=cv.getContext("2d"); if(!x) throw new Error("no canvas");
   x.textBaseline="middle";
@@ -2239,12 +2352,15 @@ function buildQuoteImage(){
   x.fillStyle="#a9c8e4"; x.font=F(19); x.fillText(L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti",W/2,headH-56);
   x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText((L?"عرض سعر":"DEVIS / QUOTE")+"  ·  "+qno,W/2,headH-22);
 
-  let y=headH+10;
+  // ══ شريط الترويسة الرسمية: عربي يمين · إنجليزي يسار ══
+  drawLetterhead(x,W,headH,letterH);
+
+  let y=headH+letterH+10;
   // بيانات العميل
   if(c.name){
     x.fillStyle="#EDF5FA"; x.fillRect(30,y,W-60,54);
-    x.fillStyle="#0F3A52"; x.textAlign=L?"right":"left"; x.font=F(22,"bold");
-    const cust=(L?"العميل: ":"Client: ")+c.name+(c.shop?" — "+c.shop:"")+(c.phone?"  ·  "+c.phone:"");
+    x.fillStyle="#0F3A52"; x.textAlign=L?"right":"left"; x.font=F(20,"bold");
+    const cust=(L?"العميل: ":"Client: ")+c.name+(c.shop?" — "+c.shop:"")+(c.phone?"  ·  \u202A"+c.phone+"\u202C":"")+(c.location?(L?"  ·  📍 ":"  ·  📍 ")+c.location:"");
     x.fillText(AR(cust), L?W-50:50, y+27);
     y+=custH;
   }
@@ -2296,7 +2412,7 @@ function buildQuoteImage(){
   x.fillStyle="#fff"; x.textAlign="center";
   x.fillText((L?"واتساب  ":"WhatsApp  ")+ph, W/2, by+bh/2);
   x.fillStyle="#0F3A52"; x.font=F(19,"bold");
-  x.fillText("Griffin Africa · griffinafrica2020-calc.github.io/griffin-catalog", W/2, by+bh+34);
+  x.fillText("Griffin Africa · griffin-africa.com", W/2, by+bh+34);
 
   bumpStat("quotes");
   // Blob بدل dataURL النصّي الضخم (يمنع تعليق المتصفح، خاصة الخفي)
@@ -2824,6 +2940,20 @@ function adminSettings(){
   <button class="btn btn-primary" onclick="saveSettings()">💾 ${L?"حفظ الإعدادات":"Save settings"}</button>
 
   <div class="hairline" style="margin:22px 0"></div>
+  <label class="toggle-row"><span>👁️ ${L?"إخفاء كل الأسعار (يظهر «اتصل للسعر»)":"Hide all prices (show 'Call for price')"}</span>
+    <input type="checkbox" id="setHidePrices" ${CONFIG.hidePrices?"checked":""} onchange="toggleHidePrices(this.checked)"></label>
+
+  <div class="hairline" style="margin:22px 0"></div>
+  <div class="admin-note">📢 ${L?"شريط الإعلانات (يظهر أعلى الصفحة الرئيسية لكل العملاء).":"Announcement bar (top of home page)."}</div>
+  <label class="toggle-row" style="margin-bottom:10px"><span>${L?"تفعيل الإعلان":"Enable announcement"}</span>
+    <input type="checkbox" id="annActive" ${(CONFIG.announce||{}).active?"checked":""}></label>
+  <div class="field"><label>${L?"نص الإعلان":"Announcement text"}</label>
+    <input class="inp" id="annText" value="${esc((CONFIG.announce||{}).text||"")}" placeholder="${L?"مثال: 🚚 وصل اليوم: حليب سعودية — كميات محدودة":"e.g. Arrived today: ..."}"></div>
+  <div class="field"><label>${L?"ينتهي تلقائياً بتاريخ (اختياري)":"Auto-expire date (optional)"}</label>
+    <input class="inp" id="annUntil" type="date" value="${esc((CONFIG.announce||{}).until||"")}" dir="ltr"></div>
+  <button class="btn btn-primary btn-sm" onclick="saveAnnounce()">💾 ${L?"حفظ الإعلان":"Save announcement"}</button>
+
+  <div class="hairline" style="margin:22px 0"></div>
   <div class="admin-note">📄 ${L?"الشروط والأحكام وسياسة الإرجاع (تظهر للعملاء في القائمة).":"Terms & return policy (shown to customers)."}</div>
   <div class="field"><label>${L?"سياسة البيع والشروط":"Sales terms"}</label><textarea class="inp" id="setTerms" rows="4" style="height:auto;min-height:80px">${esc(CONFIG.terms||"")}</textarea></div>
   <div class="field"><label>${L?"سياسة الاستبدال والإرجاع":"Return & exchange policy"}</label><textarea class="inp" id="setReturn" rows="4" style="height:auto;min-height:80px">${esc(CONFIG.returnPolicy||"")}</textarea></div>
@@ -2833,7 +2963,8 @@ function adminSettings(){
   <div class="admin-note">📞 ${L?"مندوبو المبيعات (يظهرون في «تواصل معنا»). أضف اسماً ورقماً.":"Sales reps (shown in Contact). Add name & phone."}</div>
   <div id="repsList">${renderRepsAdmin()}</div>
   <div class="inp-row"><input class="inp" id="repName" placeholder="${L?"اسم المندوب":"Rep name"}"><input class="inp" id="repPhone" placeholder="${L?"الرقم الدولي":"Intl phone"}" dir="ltr"></div>
-  <button class="btn btn-navy btn-sm" onclick="addRep()">➕ ${L?"إضافة مندوب":"Add rep"}</button>
+  <div class="inp-row"><input class="inp" id="repRole" placeholder="${L?"المسمى الوظيفي (مثل: مدير المبيعات)":"Job title (e.g. Sales Manager)"}"><input class="inp" id="repInfo" placeholder="${L?"معلومات إضافية (اختياري)":"Extra info (optional)"}"></div>
+  <button class="btn btn-navy btn-sm" id="repAddBtn" onclick="addRep()">➕ ${L?"إضافة مندوب":"Add rep"}</button>
 
   <div class="hairline" style="margin:22px 0"></div>
   <div class="admin-note">🔗 ${L?"روابط القنوات (تظهر في «تواصل معنا»). اتركها فارغة لإخفائها.":"Channel links (shown in Contact). Leave blank to hide."}</div>
@@ -2876,6 +3007,63 @@ function saveSettings(){
   saveConfig(); wireLinks(); applyLang(); schedulePublish();
   toast(lang==="ar"?"حُفظت الإعدادات ✓":"Saved ✓","ok");
 }
+function saveAnnounce(){
+  CONFIG.announce={
+    active:document.getElementById("annActive").checked,
+    text:document.getElementById("annText").value.trim(),
+    until:document.getElementById("annUntil").value||"",
+  };
+  saveConfig(); schedulePublish(); renderAnnounce();
+  toast(lang==="ar"?"حُفظ الإعلان ✓":"Announcement saved ✓","ok");
+}
+function toggleHidePrices(on){
+  CONFIG.hidePrices=!!on; saveConfig(); schedulePublish();
+  loadData(); applyLang();
+  if(currentView==="brand"&&activeBrand) openBrand(activeBrand,true);
+  toast(lang==="ar"?(on?"الأسعار مخفية — يظهر «اتصل للسعر»":"عادت الأسعار"):(on?"Prices hidden":"Prices shown"),"ok");
+}
+/* ══ طلب إرجاع بضاعة (طلب عكسي من العميل) ══ */
+function openReturn(){ closeMenu();
+  const c=getCustomer()||{};
+  ["retOrderNo","retItems","retNote"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  document.getElementById("returnBackdrop").classList.add("open");
+  document.getElementById("returnSheet").classList.add("open");
+}
+function closeReturn(){ document.getElementById("returnBackdrop").classList.remove("open"); document.getElementById("returnSheet").classList.remove("open"); }
+function submitReturn(){
+  const items=document.getElementById("retItems").value.trim();
+  if(!items){ toast(lang==="ar"?"حدّد الأصناف المراد إرجاعها":"Specify items to return","err"); return; }
+  requireCustomer(()=>{
+    const c=getCustomer()||{};
+    const L=lang==="ar";
+    const orderNo=document.getElementById("retOrderNo").value.trim();
+    const reason=document.getElementById("retReason").value;
+    const note=document.getElementById("retNote").value.trim();
+    const rno="RET-"+Date.now().toString().slice(-6);
+    const lines=[];
+    lines.push(`↩️ ${L?"طلب إرجاع بضاعة":"Return request"}: ${rno}`);
+    lines.push(`🏢 ${COMPANY.ar.name} — ${COMPANY.ar.branch}`);
+    lines.push("");
+    lines.push(`👤 ${L?"العميل":"Customer"}: ${c.name||""}${c.shop?" — "+c.shop:""} | ${c.phone||""}`);
+    if(c.location) lines.push(`📍 ${L?"العنوان":"Address"}: ${c.location}`);
+    if(orderNo) lines.push(`🧾 ${L?"طلب مرجعي":"Ref order"}: ${orderNo}`);
+    lines.push("");
+    lines.push(`📦 ${L?"الأصناف":"Items"}:`);
+    lines.push(items);
+    lines.push("");
+    lines.push(`❓ ${L?"السبب":"Reason"}: ${reason}`);
+    if(note) lines.push(`📝 ${L?"ملاحظات":"Notes"}: ${note}`);
+    // احفظ سجلاً محلياً وسحابياً
+    const rec={num:rno,_cid:Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8),ts:Date.now(),
+      type:"return",cust:{name:c.name||"",phone:c.phone||"",shop:c.shop||"",location:c.location||""},
+      orderNo,items,reason,note,status:"pending"};
+    const rets=DB.get("returns",[]); rets.push(rec); DB.set("returns",rets.slice(-200));
+    if(FB.ready) pushWithRetry("returns",rec._cid,rec);
+    closeReturn();
+    window.open(`https://wa.me/${waNum(CONFIG.whatsappNumber)}?text=${encodeURIComponent(lines.join("\n"))}`,"_blank");
+    toast(L?"تم إرسال طلب الإرجاع ✓":"Return request sent ✓","ok");
+  });
+}
 function saveTerms(){
   CONFIG.terms=document.getElementById("setTerms").value.trim();
   CONFIG.returnPolicy=document.getElementById("setReturn").value.trim();
@@ -2913,20 +3101,46 @@ function renderRepsAdmin(){
   if(!reps.length) return `<div style="font-size:12px;color:var(--silver);padding:6px 0">${L?"لا مندوبين بعد":"No reps yet"}</div>`;
   return reps.map((r,i)=>`<div class="rep-admin-row">
     <div class="rep-photo" onclick="pickRepPhoto(${i})" style="cursor:pointer">${r.photo?`<img src="${r.photo}" alt="">`:"📷"}</div>
-    <div style="flex:1"><b style="font-size:13px">${esc(r.name)}</b><div style="font-size:11px;color:var(--silver)" dir="ltr">${esc(r.phone)}</div></div>
-    <button class="mini-btn del" onclick="removeRep(${i})">🗑</button>
+    <div style="flex:1">
+      <b style="font-size:13px">${esc(r.name)}</b>
+      ${r.role?`<div style="font-size:11px;color:var(--sky);font-weight:700">${esc(r.role)}</div>`:""}
+      <div style="font-size:11px;color:var(--silver)" dir="ltr">${esc(r.phone)}</div>
+    </div>
+    <button class="mini-btn" onclick="editRep(${i})" title="${L?"تعديل":"Edit"}">✏️</button>
+    <button class="mini-btn del" onclick="removeRep(${i})" title="${L?"حذف":"Delete"}">🗑</button>
   </div>`).join("");
 }
+let _editRepIdx=-1;
 function addRep(){
   const name=document.getElementById("repName").value.trim();
   const phone=document.getElementById("repPhone").value.trim();
+  const role=(document.getElementById("repRole")||{}).value?document.getElementById("repRole").value.trim():"";
   if(!name||!phone){ toast(lang==="ar"?"الاسم والرقم مطلوبان":"Name & phone required","err"); return; }
-  CONFIG.reps=(CONFIG.reps||[]).concat([{name,phone,photo:""}]);
+  if(_editRepIdx>=0){
+    // تعديل مندوب موجود
+    const r=CONFIG.reps[_editRepIdx];
+    r.name=name; r.phone=phone; r.role=role; r.info=(document.getElementById("repInfo")||{}).value?document.getElementById("repInfo").value.trim():(r.info||"");
+    _editRepIdx=-1;
+    toast(lang==="ar"?"حُدّث المندوب ✓":"Rep updated ✓","ok");
+  }else{
+    CONFIG.reps=(CONFIG.reps||[]).concat([{name,phone,role,info:(document.getElementById("repInfo")||{}).value?document.getElementById("repInfo").value.trim():"",photo:""}]);
+    toast(lang==="ar"?"أُضيف المندوب ✓":"Rep added ✓","ok");
+  }
   saveConfig(); schedulePublish(); renderAdminBody();
-  toast(lang==="ar"?"أُضيف المندوب ✓":"Rep added ✓","ok");
+}
+function editRep(i){
+  const r=CONFIG.reps[i]; if(!r)return;
+  _editRepIdx=i;
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el)el.value=v||""; };
+  set("repName",r.name); set("repPhone",r.phone); set("repRole",r.role); set("repInfo",r.info);
+  const btn=document.getElementById("repAddBtn"); if(btn) btn.innerHTML="💾 "+(lang==="ar"?"حفظ التعديل":"Save edit");
+  const el=document.getElementById("repName"); if(el){ el.scrollIntoView({behavior:"smooth",block:"center"}); el.focus(); }
+  toast(lang==="ar"?"عدّل البيانات ثم احفظ":"Edit then save","ok");
 }
 function removeRep(i){
+  if(!confirm(lang==="ar"?"حذف هذا المندوب؟":"Delete this rep?"))return;
   CONFIG.reps=(CONFIG.reps||[]).filter((_,idx)=>idx!==i);
+  _editRepIdx=-1;
   saveConfig(); schedulePublish(); renderAdminBody();
 }
 function pickRepPhoto(i){
@@ -3147,7 +3361,12 @@ function renderContact(){
     html+=reps.map(r=>`
       <a class="rep-card" href="https://wa.me/${waNum(r.phone)}" target="_blank" rel="noopener">
         <div class="rep-photo">${r.photo?`<img src="${r.photo}" alt="">`:"👤"}</div>
-        <div class="rep-info"><div class="rep-name">${esc(r.name)}</div><div class="rep-phone" dir="ltr">${esc(fmtPhonePro(r.phone))}</div></div>
+        <div class="rep-info">
+          <div class="rep-name">${esc(r.name)}</div>
+          ${r.role?`<div class="rep-role">${esc(r.role)}</div>`:""}
+          <div class="rep-phone" dir="ltr">${esc(fmtPhonePro(r.phone))}</div>
+          ${r.info?`<div class="rep-extra">${esc(r.info)}</div>`:""}
+        </div>
         <span class="rep-wa">💬</span>
       </a>`).join("");
   }
@@ -3194,7 +3413,7 @@ function renderAboutApp(){
       <div class="aa-name">${L?"كتالوج جريفن أفريقيا":"Griffin Africa Catalogue"}</div>
       <div class="aa-tag">${L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti"}</div>
       <div class="aa-ver">${L?"الإصدار":"Version"} ${esc(ver)} <span class="aa-build">(${APP_BUILD})</span></div>
-      <p class="aa-desc">${L?"كتالوج تفاعلي لعملاء الجملة: تصفّح منتجاتنا بأسعار محدّثة، واطلب مباشرة عبر واتساب. نهتم بعملائنا ونسعى لخدمتهم بأفضل صورة.":"Interactive wholesale catalogue: browse live prices and order via WhatsApp. We care about our customers."}</p>
+      <p class="aa-desc">${L?"كتالوج تفاعلي لعملائنا في جيبوتي (جملة – تجزئة).":"Interactive catalogue for our customers in Djibouti (wholesale – retail)."}</p>
       <div class="aa-status" id="aaStatus">🔄 ${L?"جارٍ التحقق من التحديثات...":"Checking for updates..."}</div>
       <button class="btn btn-ghost btn-sm" onclick="checkForUpdate()">🔄 ${L?"التحقق من التحديثات":"Check for updates"}</button>
     </div>`;
@@ -3333,7 +3552,7 @@ function boot(){
     } });
   }
   window.addEventListener("scroll",onScroll,{passive:true});
-  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu();closeContact();closeTerms();closeAbout();closeGate(); } });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu();closeContact();closeTerms();closeAbout();closeGate();closeReturn(); } });
 }
 boot();
 </script>
