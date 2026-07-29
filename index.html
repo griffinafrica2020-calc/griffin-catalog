@@ -637,42 +637,66 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .call-price:active{transform:scale(.98)}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--tint-2);border-radius:12px;font-size:13.5px;font-weight:600;color:var(--navy);cursor:pointer}
 .toggle-row input{width:20px;height:20px;accent-color:var(--navy);flex-shrink:0}
-/* ══ شريط الإعلان المتحرك ══ */
+/* ══ شريط الإعلان المتحرك (٣ سمات لونية) ══ */
 #announceBar{margin:0 0 14px}
 .announce{position:relative;display:flex;align-items:center;gap:11px;
-  background:linear-gradient(115deg,#D4A855 0%,#C89B4A 35%,#A9782F 70%,#C89B4A 100%);
-  background-size:200% 100%;color:#fff;padding:13px 16px;border-radius:14px;
-  font-size:13.5px;font-weight:700;overflow:hidden;
-  box-shadow:0 5px 18px rgba(168,120,47,.32);
-  animation:annIn .5s cubic-bezier(.2,.9,.25,1), annFlow 9s ease-in-out infinite}
+  padding:13px 16px;border-radius:14px;font-size:13.5px;font-weight:700;overflow:hidden;
+  animation:annIn .5s cubic-bezier(.2,.9,.25,1), annFlow 9s ease-in-out infinite;
+  background-size:200% 100%}
+/* السمة ١: كحلي فخم بنص ذهبي (كالترويسة) */
+.announce.th-navy{background:linear-gradient(115deg,#0a4a8f 0%,#032b60 40%,#011c44 70%,#0a4a8f 100%);
+  color:#F2D9A0;box-shadow:0 5px 18px rgba(3,43,96,.34)}
+.announce.th-navy::before{background:linear-gradient(90deg,transparent,rgba(217,178,95,.85),transparent)}
+/* السمة ٢: أبيض نظيف بحافة ذهبية ونص كحلي */
+.announce.th-white{background:linear-gradient(115deg,#ffffff 0%,#F7FAFC 50%,#ffffff 100%);
+  color:#0b2e52;border:1px solid #E6EDF3;border-inline-start:5px solid #C89B4A;
+  box-shadow:0 4px 14px rgba(11,46,82,.10)}
+.announce.th-white::before{background:linear-gradient(90deg,transparent,rgba(200,155,74,.55),transparent)}
+.announce.th-white::after{background:linear-gradient(100deg,transparent,rgba(200,155,74,.16),transparent)}
+/* السمة ٣: أخضر زمردي هادئ */
+.announce.th-green{background:linear-gradient(115deg,#12805A 0%,#0C6647 40%,#0A5239 70%,#12805A 100%);
+  color:#EAF7F0;box-shadow:0 5px 18px rgba(12,102,71,.30)}
+.announce.th-green::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent)}
 /* لمعة تمر عبر الشريط */
 .announce::after{content:"";position:absolute;top:0;bottom:0;width:38%;
-  background:linear-gradient(100deg,transparent,rgba(255,255,255,.30),transparent);
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);
   transform:skewX(-18deg);animation:annShine 4.5s ease-in-out infinite;pointer-events:none}
-/* حافة ذهبية لامعة أعلى */
-.announce::before{content:"";position:absolute;top:0;inset-inline:0;height:1.5px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent)}
+/* حافة لامعة أعلى */
+.announce::before{content:"";position:absolute;top:0;inset-inline:0;height:1.5px}
 .announce .ann-ico{font-size:20px;flex-shrink:0;display:inline-block;
   animation:annBell 2.6s ease-in-out infinite;transform-origin:50% 10%}
 .announce .ann-txt{line-height:1.55;position:relative;z-index:1}
 .announce.has-img{padding:10px 14px}
 .ann-img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#fff;flex-shrink:0;
   box-shadow:0 3px 9px rgba(0,0,0,.22);animation:annPop .55s cubic-bezier(.2,1.4,.4,1) both;position:relative;z-index:1}
-/* النص الطويل: تمرير متدفق */
-.ann-marquee{flex:1;overflow:hidden;position:relative;z-index:1}
-.ann-marquee .ann-txt{display:inline-block;white-space:nowrap;padding-inline-start:100%;
-  animation:annScroll 16s linear infinite}
-.announce:hover .ann-marquee .ann-txt{animation-play-state:paused}
+/* النص الطويل: شريط متدفق متصل (محتوى ظاهر دائماً) */
+.ann-marquee{flex:1;overflow:hidden;position:relative;z-index:1;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%)}
+.ann-track{display:flex;width:max-content;direction:ltr;
+  animation:annScroll var(--annDur,20s) linear infinite}
+.ann-track .ann-seg{white-space:nowrap;padding-inline-end:56px;line-height:1.55}
+.announce:hover .ann-track,.announce:active .ann-track{animation-play-state:paused}
 @keyframes annIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes annFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 @keyframes annShine{0%{inset-inline-start:-45%}55%,100%{inset-inline-start:115%}}
 @keyframes annBell{0%,88%,100%{transform:rotate(0)}90%{transform:rotate(13deg)}94%{transform:rotate(-11deg)}97%{transform:rotate(6deg)}}
 @keyframes annPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
-@keyframes annScroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+/* -50% = عرض مقطع واحد بالضبط (نصّان متطابقان) → دوران متصل بلا قفزة */
+@keyframes annScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){
-  .announce,.announce::after,.ann-ico,.ann-img,.ann-marquee .ann-txt{animation:none!important}
-  .ann-marquee .ann-txt{padding-inline-start:0}
+  .announce,.announce::after,.ann-ico,.ann-img,.ann-track{animation:none!important}
 }
+/* معاينة السمات في لوحة المدير */
+.th-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.th-opt{padding:10px 6px;border-radius:11px;border:2px solid var(--line);font-size:11.5px;font-weight:800;
+  cursor:pointer;text-align:center;font-family:inherit;transition:all .15s}
+.th-opt.on{border-color:var(--navy);box-shadow:0 3px 10px rgba(15,58,82,.2);transform:translateY(-1px)}
+.th-opt[data-th="navy"]{background:linear-gradient(135deg,#0a4a8f,#011c44);color:#F2D9A0}
+.th-opt[data-th="white"]{background:#fff;color:#0b2e52;border-inline-start:5px solid #C89B4A}
+.th-opt[data-th="green"]{background:linear-gradient(135deg,#12805A,#0A5239);color:#EAF7F0}
+.ann-upload{display:flex;align-items:center;gap:9px;margin-top:8px}
+.ann-prev{width:52px;height:52px;border-radius:10px;object-fit:cover;border:1px solid var(--line);background:var(--tint)}
 /* منتقي أصناف الإرجاع */
 .ret-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ret-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
@@ -1097,11 +1121,11 @@ const DEFAULTS = {
   channels: { whatsapp:"", tiktok:"", youtube:"", facebook:"" },
   appVersion: "2.2",              // رقم النسخة الظاهر في "حول التطبيق"
   hidePrices: false,              // إخفاء كل الأسعار وإظهار "اتصل للسعر"
-  announce: { text:"", active:false, until:"", productId:"" },   // شريط إعلان (على وشك الوصول/وصل اليوم...)
+  announce: { text:"", active:false, until:"", productId:"", img:"", theme:"navy" },   // شريط إعلان (على وشك الوصول/وصل اليوم...)
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v28";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v29";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 /* بيانات الترويسة الرسمية (ثابتة في المستندات) */
 const COMPANY = {
   ar:{ name:"شركة جريفن أفريقيا", branch:"فرع جيبوتي",
@@ -1713,15 +1737,23 @@ function renderAnnounce(){
   if(show&&a.until){ const end=new Date(a.until+"T23:59:59"); if(!isNaN(end)&&Date.now()>end.getTime()) show=false; }
   if(!show){ el.innerHTML=""; el.style.display="none"; return; }
   el.style.display="block";
-  const p=a.productId?byId(a.productId):null;
   const txt=a.text.trim();
-  // النص الطويل يمرّ متدفقاً؛ القصير يبقى ثابتاً بلمعة
-  const isLong=txt.length>46;
-  const body=isLong
-    ? `<div class="ann-marquee"><span class="ann-txt">${esc(txt)}</span></div>`
-    : `<span class="ann-txt">${esc(txt)}</span>`;
-  el.innerHTML=`<div class="announce${p?" has-img":""}">
-    ${p?`<img class="ann-img" src="${p.img}" alt="">`:`<span class="ann-ico">📢</span>`}
+  // مصدر الصورة: مرفوعة من الجهاز أولاً، وإلا صورة صنف مختار
+  const p=a.productId?byId(a.productId):null;
+  const imgSrc=a.img||(p?p.img:"");
+  const theme=["navy","white","green"].includes(a.theme)?a.theme:"navy";
+  // النص الطويل يمرّ متدفقاً؛ السرعة تُحسب من طوله (لا تعود بطيئة/سريعة عشوائياً)
+  const isLong=txt.length>42;
+  let body;
+  if(isLong){
+    const dur=Math.max(12,Math.round(txt.length*0.18));   // وتيرة قراءة مريحة (~50 بكسل/ث)
+    const seg=`<span class="ann-seg">${esc(txt)}</span>`;
+    body=`<div class="ann-marquee"><div class="ann-track" style="--annDur:${dur}s">${seg}${seg}</div></div>`;
+  }else{
+    body=`<span class="ann-txt">${esc(txt)}</span>`;
+  }
+  el.innerHTML=`<div class="announce th-${theme}${imgSrc?" has-img":""}">
+    ${imgSrc?`<img class="ann-img" src="${imgSrc}" alt="">`:`<span class="ann-ico">📢</span>`}
     ${body}</div>`;
   if(currentView==="brand"&&activeBrand) openBrand(activeBrand,true);
   if(currentView==="admin") renderAdmin();
@@ -3019,11 +3051,25 @@ function adminSettings(){
     <input class="inp" id="annText" value="${esc((CONFIG.announce||{}).text||"")}" placeholder="${L?"مثال: 🚚 وصل اليوم: حليب سعودية — كميات محدودة":"e.g. Arrived today: ..."}"></div>
   <div class="field"><label>${L?"ينتهي تلقائياً بتاريخ (اختياري)":"Auto-expire date (optional)"}</label>
     <input class="inp" id="annUntil" type="date" value="${esc((CONFIG.announce||{}).until||"")}" dir="ltr"></div>
-  <div class="field"><label>🖼️ ${L?"صورة صنف مرافقة (اختياري)":"Attach product image (optional)"}</label>
-    <select class="inp" id="annProd">
+  <div class="field"><label>🎨 ${L?"لون الإعلان":"Announcement colour"}</label>
+    <div class="th-picker">
+      <button type="button" class="th-opt ${((CONFIG.announce||{}).theme||"navy")==="navy"?"on":""}" data-th="navy" onclick="pickAnnTheme('navy')">${L?"كحلي":"Navy"}</button>
+      <button type="button" class="th-opt ${(CONFIG.announce||{}).theme==="white"?"on":""}" data-th="white" onclick="pickAnnTheme('white')">${L?"أبيض":"White"}</button>
+      <button type="button" class="th-opt ${(CONFIG.announce||{}).theme==="green"?"on":""}" data-th="green" onclick="pickAnnTheme('green')">${L?"أخضر":"Green"}</button>
+    </div>
+    <input type="hidden" id="annTheme" value="${esc((CONFIG.announce||{}).theme||"navy")}"></div>
+  <div class="field"><label>🖼️ ${L?"صورة مرافقة (اختياري)":"Attach image (optional)"}</label>
+    <select class="inp" id="annProd" onchange="document.getElementById('annImgData').value=''">
       <option value="">${L?"— بلا صورة —":"— none —"}</option>
       ${PRODUCTS.map(p=>`<option value="${p.id}" ${(CONFIG.announce||{}).productId===p.id?"selected":""}>${esc(nm(p.name))}</option>`).join("")}
-    </select></div>
+    </select>
+    <div class="hint">${L?"أو ارفع صورة من جهازك (تُقدَّم على صورة الصنف):":"Or upload from your device:"}</div>
+    <div class="ann-upload">
+      <button class="btn btn-navy btn-sm" onclick="pickAnnImage()">📷 ${L?"رفع صورة من الجهاز":"Upload image"}</button>
+      <img id="annImgPrev" class="ann-prev" src="${esc((CONFIG.announce||{}).img||"")}" style="${(CONFIG.announce||{}).img?"":"display:none"}" alt="">
+      <button class="mini-btn del" onclick="clearAnnImage()" title="${L?"إزالة":"Remove"}">🗑</button>
+    </div>
+    <input type="hidden" id="annImgData" value="${esc((CONFIG.announce||{}).img||"")}"></div>
   <button class="btn btn-primary btn-sm" onclick="saveAnnounce()">💾 ${L?"حفظ الإعلان":"Save announcement"}</button>
 
   <div class="hairline" style="margin:22px 0"></div>
@@ -3080,12 +3126,37 @@ function saveSettings(){
   saveConfig(); wireLinks(); applyLang(); schedulePublish();
   toast(lang==="ar"?"حُفظت الإعدادات ✓":"Saved ✓","ok");
 }
+function pickAnnTheme(th){
+  document.getElementById("annTheme").value=th;
+  document.querySelectorAll(".th-opt").forEach(b=>b.classList.toggle("on",b.dataset.th===th));
+}
+function pickAnnImage(){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f)return;
+    const rd=new FileReader();
+    rd.onload=()=>{ compressImg(rd.result,420,dataUrl=>{
+      document.getElementById("annImgData").value=dataUrl;
+      const pv=document.getElementById("annImgPrev");
+      if(pv){ pv.src=dataUrl; pv.style.display=""; }
+      toast(lang==="ar"?"اختيرت الصورة — اضغط حفظ الإعلان":"Image selected — press Save","ok");
+    }); };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+function clearAnnImage(){
+  document.getElementById("annImgData").value="";
+  const pv=document.getElementById("annImgPrev"); if(pv){ pv.src=""; pv.style.display="none"; }
+  toast(lang==="ar"?"أُزيلت الصورة — اضغط حفظ":"Image removed — press Save","ok");
+}
 function saveAnnounce(){
   CONFIG.announce={
     active:document.getElementById("annActive").checked,
     text:document.getElementById("annText").value.trim(),
     until:document.getElementById("annUntil").value||"",
     productId:(document.getElementById("annProd")||{}).value||"",
+    img:(document.getElementById("annImgData")||{}).value||"",
+    theme:(document.getElementById("annTheme")||{}).value||"navy",
   };
   saveConfig(); schedulePublish(); renderAnnounce();
   toast(lang==="ar"?"حُفظ الإعلان ✓":"Announcement saved ✓","ok");
