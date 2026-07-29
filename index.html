@@ -637,12 +637,42 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .call-price:active{transform:scale(.98)}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--tint-2);border-radius:12px;font-size:13.5px;font-weight:600;color:var(--navy);cursor:pointer}
 .toggle-row input{width:20px;height:20px;accent-color:var(--navy);flex-shrink:0}
-/* شريط الإعلان */
+/* ══ شريط الإعلان المتحرك ══ */
 #announceBar{margin:0 0 14px}
-.announce{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#C89B4A,#A9782F);color:#fff;
-  padding:12px 16px;border-radius:14px;font-size:13.5px;font-weight:700;box-shadow:0 4px 14px rgba(168,120,47,.28);animation:annIn .4s ease}
-.announce .ann-ico{font-size:19px;flex-shrink:0}
-.announce .ann-txt{line-height:1.5}
+.announce{position:relative;display:flex;align-items:center;gap:11px;
+  background:linear-gradient(115deg,#D4A855 0%,#C89B4A 35%,#A9782F 70%,#C89B4A 100%);
+  background-size:200% 100%;color:#fff;padding:13px 16px;border-radius:14px;
+  font-size:13.5px;font-weight:700;overflow:hidden;
+  box-shadow:0 5px 18px rgba(168,120,47,.32);
+  animation:annIn .5s cubic-bezier(.2,.9,.25,1), annFlow 9s ease-in-out infinite}
+/* لمعة تمر عبر الشريط */
+.announce::after{content:"";position:absolute;top:0;bottom:0;width:38%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.30),transparent);
+  transform:skewX(-18deg);animation:annShine 4.5s ease-in-out infinite;pointer-events:none}
+/* حافة ذهبية لامعة أعلى */
+.announce::before{content:"";position:absolute;top:0;inset-inline:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent)}
+.announce .ann-ico{font-size:20px;flex-shrink:0;display:inline-block;
+  animation:annBell 2.6s ease-in-out infinite;transform-origin:50% 10%}
+.announce .ann-txt{line-height:1.55;position:relative;z-index:1}
+.announce.has-img{padding:10px 14px}
+.ann-img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#fff;flex-shrink:0;
+  box-shadow:0 3px 9px rgba(0,0,0,.22);animation:annPop .55s cubic-bezier(.2,1.4,.4,1) both;position:relative;z-index:1}
+/* النص الطويل: تمرير متدفق */
+.ann-marquee{flex:1;overflow:hidden;position:relative;z-index:1}
+.ann-marquee .ann-txt{display:inline-block;white-space:nowrap;padding-inline-start:100%;
+  animation:annScroll 16s linear infinite}
+.announce:hover .ann-marquee .ann-txt{animation-play-state:paused}
+@keyframes annIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes annFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes annShine{0%{inset-inline-start:-45%}55%,100%{inset-inline-start:115%}}
+@keyframes annBell{0%,88%,100%{transform:rotate(0)}90%{transform:rotate(13deg)}94%{transform:rotate(-11deg)}97%{transform:rotate(6deg)}}
+@keyframes annPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes annScroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@media(prefers-reduced-motion:reduce){
+  .announce,.announce::after,.ann-ico,.ann-img,.ann-marquee .ann-txt{animation:none!important}
+  .ann-marquee .ann-txt{padding-inline-start:0}
+}
 /* منتقي أصناف الإرجاع */
 .ret-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ret-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
@@ -650,10 +680,6 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .ret-row b{color:var(--navy);font-size:13px}
 .ret-meta{font-size:11.5px;color:var(--silver);margin-top:2px}
 .ret-empty{font-size:12px;color:var(--silver);text-align:center;padding:10px}
-/* صورة الإعلان */
-.announce.has-img{padding:10px 14px}
-.ann-img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#fff;flex-shrink:0}
-@keyframes annIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 /* تواصل معنا */
 .contact-wrap{padding:16px 18px}
 .contact-main{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,#0a4a8f,#032b60);color:#fff;border-radius:16px;padding:16px;text-decoration:none;margin-bottom:16px}
@@ -1075,7 +1101,7 @@ const DEFAULTS = {
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v27";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v28";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 /* بيانات الترويسة الرسمية (ثابتة في المستندات) */
 const COMPANY = {
   ar:{ name:"شركة جريفن أفريقيا", branch:"فرع جيبوتي",
@@ -1688,9 +1714,15 @@ function renderAnnounce(){
   if(!show){ el.innerHTML=""; el.style.display="none"; return; }
   el.style.display="block";
   const p=a.productId?byId(a.productId):null;
+  const txt=a.text.trim();
+  // النص الطويل يمرّ متدفقاً؛ القصير يبقى ثابتاً بلمعة
+  const isLong=txt.length>46;
+  const body=isLong
+    ? `<div class="ann-marquee"><span class="ann-txt">${esc(txt)}</span></div>`
+    : `<span class="ann-txt">${esc(txt)}</span>`;
   el.innerHTML=`<div class="announce${p?" has-img":""}">
     ${p?`<img class="ann-img" src="${p.img}" alt="">`:`<span class="ann-ico">📢</span>`}
-    <span class="ann-txt">${esc(a.text.trim())}</span></div>`;
+    ${body}</div>`;
   if(currentView==="brand"&&activeBrand) openBrand(activeBrand,true);
   if(currentView==="admin") renderAdmin();
   document.querySelectorAll(".curLabel,#curLabel").forEach(e=>e.textContent=CONFIG.currency);
