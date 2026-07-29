@@ -1075,7 +1075,7 @@ const DEFAULTS = {
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v26";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v27";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 /* بيانات الترويسة الرسمية (ثابتة في المستندات) */
 const COMPANY = {
   ar:{ name:"شركة جريفن أفريقيا", branch:"فرع جيبوتي",
@@ -2318,31 +2318,27 @@ function fmtPhonePro(p){
   if(d.startsWith("253")&&d.length===11) return "+253 "+d.slice(3).replace(/(\d{2})(?=\d)/g,"$1 ");
   return "+"+d.replace(/(\d{3})(\d{2})(?=\d)/, "$1 $2 ").replace(/(\d{2})(?=\d\d)/g,"$1 ");
 }
-/* رسم شريط الترويسة الرسمية على canvas: عربي يمين · إنجليزي يسار */
+/* رسم الترويسة داخل المربع الأزرق: عربي يمين · إنجليزي يسار · الشعار في الوسط */
 function drawLetterhead(x,W,top,h){
   const F=(sz,w)=> (w||"")+" "+sz+"px 'Segoe UI','Noto Sans Arabic',Tahoma,sans-serif";
-  // خلفية فاتحة + خط ذهبي علوي
-  x.fillStyle="#F7FAFC"; x.fillRect(0,top,W,h);
-  x.fillStyle="#C89B4A"; x.fillRect(0,top,W,4);
-  const pad=44, midY=top+18;
+  const pad=44;
   const ar=COMPANY.ar, en=COMPANY.en;
   // العربية (يمين)
-  x.textAlign="right"; let ry=top+30;
-  x.fillStyle="#0b2e52"; x.font=F(23,"bold"); x.fillText(ar.name,W-pad,ry); ry+=30;
-  x.fillStyle="#1a4971"; x.font=F(18,"bold"); x.fillText(ar.branch,W-pad,ry); ry+=28;
-  x.fillStyle="#4a5b6a"; x.font=F(15); x.fillText(ar.addr1+" "+ar.addr2,W-pad,ry); ry+=25;
-  x.fillStyle="#0b2e52"; x.font=F(15);
-  COMPANY.phones.forEach(p=>{ x.fillText("\u202A"+p+"\u202C  :"+ar.telLabel.replace(":",""),W-pad,ry); ry+=22; });
+  x.textAlign="right"; let ry=top+62;
+  x.fillStyle="#ffffff"; x.font=F(24,"bold"); x.fillText(ar.name,W-pad,ry); ry+=32;
+  x.fillStyle="#cfe0f0"; x.font=F(19,"bold"); x.fillText(ar.branch,W-pad,ry); ry+=30;
+  x.fillStyle="#a9c8e4"; x.font=F(16); x.fillText(ar.addr1,W-pad,ry); ry+=26;
+  x.fillText(ar.addr2,W-pad,ry); ry+=29;
+  x.fillStyle="#dbe9f6"; x.font=F(16);
+  COMPANY.phones.forEach(p=>{ x.fillText("\u202A"+p+"\u202C  :"+ar.telLabel.replace(":",""),W-pad,ry); ry+=24; });
   // الإنجليزية (يسار)
-  x.textAlign="left"; let ey=top+30;
-  x.fillStyle="#0b2e52"; x.font=F(23,"bold"); x.fillText(en.name,pad,ey); ey+=30;
-  x.fillStyle="#1a4971"; x.font=F(18,"bold"); x.fillText(en.branch,pad,ey); ey+=28;
-  x.fillStyle="#4a5b6a"; x.font=F(15); x.fillText(en.addr1+" "+en.addr2,pad,ey); ey+=25;
-  x.fillStyle="#0b2e52"; x.font=F(15);
-  COMPANY.phones.forEach(p=>{ x.fillText(en.telLabel+" "+p,pad,ey); ey+=22; });
-  // البريد (وسط أسفل الشريط)
-  x.textAlign="center"; x.fillStyle="#0b6b3a"; x.font=F(15,"bold");
-  x.fillText("📧 "+COMPANY.email,W/2,top+h-16);
+  x.textAlign="left"; let ey=top+62;
+  x.fillStyle="#ffffff"; x.font=F(24,"bold"); x.fillText(en.name,pad,ey); ey+=32;
+  x.fillStyle="#cfe0f0"; x.font=F(19,"bold"); x.fillText(en.branch,pad,ey); ey+=30;
+  x.fillStyle="#a9c8e4"; x.font=F(16); x.fillText(en.addr1,pad,ey); ey+=26;
+  x.fillText(en.addr2,pad,ey); ey+=29;
+  x.fillStyle="#dbe9f6"; x.font=F(16);
+  COMPANY.phones.forEach(p=>{ x.fillText(en.telLabel+" "+p,pad,ey); ey+=24; });
 }
 function buildQuoteImage(){
   const t=T(), entries=Object.entries(cart);
@@ -2357,8 +2353,8 @@ function buildQuoteImage(){
     return {name:nm(p.name), tier:t[cc.tier], qty:cc.qty, price, line:price*cc.qty};
   }).filter(Boolean);
 
-  const W=1000, rowH=64, headH=330, letterH=170, custH=(c.name?112:70), footH=210, tableHead=56;
-  const H=headH+letterH+custH+tableHead+rows.length*rowH+90+footH;
+  const W=1000, rowH=64, headH=412, custH=(c.name?112:70), footH=210, tableHead=56;
+  const H=headH+14+custH+tableHead+rows.length*rowH+90+footH;
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   const x=cv.getContext("2d"); if(!x) throw new Error("no canvas");
   x.textBaseline="middle";
@@ -2367,19 +2363,23 @@ function buildQuoteImage(){
 
   // خلفية
   x.fillStyle="#ffffff"; x.fillRect(0,0,W,H);
-  // رأس كحلي متدرج (نفس تدرج الواجهة)
+  // ══ الرأس الكحلي الموحّد: الشعار وسطاً + الترويسة (عربي يمين · إنجليزي يسار) ══
   const g=x.createLinearGradient(0,0,0,headH); g.addColorStop(0,"#0a4a8f"); g.addColorStop(.6,"#032b60"); g.addColorStop(1,"#011c44");
   x.fillStyle=g; x.fillRect(0,0,W,headH);
-  // الشعار الرسمي الكامل (الأسد + GRIFFIN AFRICA) — نفس شعار الواجهة
+  // الشعار الرسمي (الأسد + GRIFFIN AFRICA)
   try{ if(_qLogo.complete&&_qLogo.width){ const lw=300, lh=lw*(_qLogo.height/_qLogo.width); x.drawImage(_qLogo,W/2-lw/2,14,lw,lh); } }catch(e){}
+  // بيانات الشركة داخل المربع الأزرق
+  drawLetterhead(x,W,0,headH);
+  // الشعار النصي + الفاصل الذهبي + العنوان + البريد (وسط الأسفل)
   x.textAlign="center";
-  x.fillStyle="#a9c8e4"; x.font=F(19); x.fillText(L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti",W/2,headH-56);
-  x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText(L?"عرض سعر":"DEVIS / QUOTE",W/2,headH-22);
+  x.fillStyle="#a9c8e4"; x.font=F(19); x.fillText(L?"بيت الاستيراد والتوزيع — جيبوتي":"Import · Wholesale — Djibouti",W/2,headH-108);
+  const gd=x.createLinearGradient(W*0.18,0,W*0.82,0);
+  gd.addColorStop(0,"rgba(200,155,74,0)"); gd.addColorStop(.5,"#C89B4A"); gd.addColorStop(1,"rgba(200,155,74,0)");
+  x.fillStyle=gd; x.fillRect(W*0.18,headH-88,W*0.64,2);
+  x.fillStyle="#D9B25F"; x.font=F(26,"bold"); x.fillText(L?"عرض سعر":"DEVIS / QUOTE",W/2,headH-58);
+  x.fillStyle="#bcd3e8"; x.font=F(16,"bold"); x.fillText("📧 "+COMPANY.email,W/2,headH-22);
 
-  // ══ شريط الترويسة الرسمية: عربي يمين · إنجليزي يسار ══
-  drawLetterhead(x,W,headH,letterH);
-
-  let y=headH+letterH+10;
+  let y=headH+14;
   // ══ صندوق: رقم العرض + التاريخ + بيانات العميل والعنوان ══
   {
     const boxH=c.name?98:56;
