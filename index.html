@@ -66,6 +66,29 @@ body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:10
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit}
 img{display:block}
+/* ══ شاشة الصيانة ══ */
+#maintScreen{display:none;position:fixed;inset:0;z-index:900;overflow-y:auto;
+  background:linear-gradient(165deg,#0a4a8f 0%,#032b60 45%,#011c44 100%);
+  padding:26px 20px;align-items:center;justify-content:center}
+#maintScreen.show{display:flex}
+.mt-card{width:100%;max-width:430px;text-align:center;color:#fff;animation:mtIn .55s cubic-bezier(.2,.9,.25,1) both}
+.mt-logo{width:210px;max-width:74%;height:auto;margin:0 auto 6px}
+.mt-ico{font-size:40px;margin:6px 0 10px;animation:mtSpin 5s ease-in-out infinite;display:inline-block}
+.mt-card h1{font-family:var(--serif);font-size:25px;font-weight:700;color:#F2D9A0;margin-bottom:10px;line-height:1.4}
+.mt-card p{font-size:14.5px;color:#bcd3e8;line-height:1.9;margin-bottom:6px}
+.mt-sep{height:2px;margin:20px auto;width:62%;
+  background:linear-gradient(90deg,transparent,rgba(217,178,95,.75),transparent)}
+.mt-code{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-radius:15px;padding:15px;backdrop-filter:blur(6px)}
+.mt-code label{display:block;font-size:12.5px;color:#a9c8e4;margin-bottom:8px;font-weight:600}
+.mt-code .inp{background:rgba(255,255,255,.95);text-align:center;letter-spacing:.28em;font-size:17px}
+.mt-admin{margin-top:16px;background:none;border:1px solid rgba(255,255,255,.22);color:#a9c8e4;
+  font-size:12.5px;font-weight:600;padding:9px 18px;border-radius:99px;cursor:pointer;font-family:inherit}
+.mt-admin:active{background:rgba(255,255,255,.08)}
+.mt-foot{margin-top:22px;font-size:11.5px;color:#7fa3c4;letter-spacing:.03em}
+@keyframes mtIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes mtSpin{0%,72%,100%{transform:rotate(0)}80%{transform:rotate(22deg)}88%{transform:rotate(-16deg)}}
+@media(prefers-reduced-motion:reduce){.mt-card,.mt-ico{animation:none!important}}
 /* شريط إشعار التحديث */
 #updateBar{display:none;position:fixed;top:0;inset-inline:0;z-index:200;background:linear-gradient(135deg,#178544,#0f6b37);color:#fff;
   padding:11px 16px;align-items:center;justify-content:space-between;gap:12px;font-size:13px;box-shadow:0 3px 14px rgba(0,0,0,.3)}
@@ -804,6 +827,26 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
+<!-- ══════════ 🔒 شاشة الصيانة (تحجب الموقع عن العملاء) ══════════ -->
+<div id="maintScreen">
+  <div class="mt-card">
+    <img class="mt-logo" src="img/griffin_hero.webp" alt="Griffin Africa">
+    <div class="mt-ico">🔧</div>
+    <h1 id="mtTitle">الموقع قيد التحديث</h1>
+    <p id="mtMsg">نعمل حالياً على تطوير الكتالوج. سنعود قريباً بإذن الله.</p>
+    <div class="mt-sep"></div>
+    <div class="mt-code">
+      <label id="mtCodeLbl">لديك رمز مراجعة؟</label>
+      <div class="pw-wrap">
+        <input class="inp pw-inp" id="mtCodeIn" type="password" inputmode="text" autocomplete="one-time-code" placeholder="••••">
+        <button type="button" class="pw-eye" onclick="togglePw('mtCodeIn',this)">👁️</button>
+      </div>
+      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px" onclick="tryMaintCode()" id="mtEnter">دخول</button>
+    </div>
+    <button class="mt-admin" onclick="maintToAdmin()" id="mtAdminBtn">⚙️ لوحة المدير</button>
+    <div class="mt-foot" id="mtFoot">شركة جريفن أفريقيا — فرع جيبوتي</div>
+  </div>
+</div>
 <div id="updateBar" role="alert">
   <span>🔄 <b data-i18n="updateReady">يتوفّر تحديث جديد للتطبيق</b></span>
   <button class="ub-btn" onclick="applyUpdate()" data-i18n="updateNow">تحديث الآن</button>
@@ -1121,11 +1164,13 @@ const DEFAULTS = {
   channels: { whatsapp:"", tiktok:"", youtube:"", facebook:"" },
   appVersion: "2.2",              // رقم النسخة الظاهر في "حول التطبيق"
   hidePrices: false,              // إخفاء كل الأسعار وإظهار "اتصل للسعر"
+  // 🔒 وضع الصيانة: يحجب الموقع عن العملاء حتى إشعار آخر (المدير ومن يملك الرمز يدخلون)
+  maintenance: { active:false, title:"", msg:"", code:"" },
   announce: { text:"", active:false, until:"", productId:"", img:"", theme:"navy" },   // شريط إعلان (على وشك الوصول/وصل اليوم...)
   // رمز دخول المدير الافتراضي — يُخزَّن كبصمة مشفّرة، غيّره من اللوحة
   adminPinDefault: "1990",
 };
-const APP_BUILD = "v29";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
+const APP_BUILD = "v30";          // معرّف الإصدار التقني (يتغيّر مع كل تحديث)
 /* بيانات الترويسة الرسمية (ثابتة في المستندات) */
 const COMPANY = {
   ar:{ name:"شركة جريفن أفريقيا", branch:"فرع جيبوتي",
@@ -1330,7 +1375,7 @@ function cloudListen(){
     FB.CATALOG_KEYS.forEach(k=>{ if(d[k]!=null){ DB.set(k,d[k]); changed=true; } });
     if(changed){
       CONFIG=Object.assign({},DEFAULTS,DB.get("config",{}));
-      loadData(); applyLang();
+      loadData(); applyLang(); applyMaintenance();
     }
   },err=>console.warn("listen err",err));
 }
@@ -1386,7 +1431,7 @@ function saveConfig(){ DB.set("config", {
   quoteValidityDays:CONFIG.quoteValidityDays, address:CONFIG.address,
   creditDays:CONFIG.creditDays, cashDiscount:CONFIG.cashDiscount,
   terms:CONFIG.terms, returnPolicy:CONFIG.returnPolicy,
-  reps:CONFIG.reps, channels:CONFIG.channels, appVersion:CONFIG.appVersion, hidePrices:CONFIG.hidePrices, announce:CONFIG.announce }); }
+  reps:CONFIG.reps, channels:CONFIG.channels, appVersion:CONFIG.appVersion, hidePrices:CONFIG.hidePrices, announce:CONFIG.announce, maintenance:CONFIG.maintenance }); }
 
 /* ══════════════════════════════════════════════════════════
    🖼️ الصور المضمّنة (شعارات + أصناف)
@@ -1564,7 +1609,7 @@ const I18N = {
     svcEyebrow:"نحن في خدمتك", svcTitle:"خدمات العملاء",
     updateReady:"يتوفّر تحديث جديد للتطبيق", updateNow:"تحديث الآن",
     compatT:"لأفضل تجربة وللطلب بسهولة، افتح الرابط في متصفح Chrome", compatOpen:"افتح في Chrome",
-    gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة", payCash:"نقدي", payCredit:"آجل", day:"يوم", callForPrice:"اتصل للسعر",
+    gateTitle:"بياناتك لإتمام الطلب", gateIntro:"أدخل اسمك ورقمك مرة واحدة — تُحفظ وتُرفق تلقائياً بكل طلباتك القادمة.", gateShop:"اسم المحل (اختياري)", gateLoc:"المنطقة / الشارع (اختياري)", gateContinue:"متابعة", payCash:"نقدي", payCredit:"آجل", day:"يوم", callForPrice:"اتصل للسعر", maintTitle:"الموقع قيد التحديث", maintMsg:"نعمل حالياً على تطوير الكتالوج. سنعود قريباً بإذن الله.", maintCodeLbl:"لديك رمز مراجعة؟", maintEnter:"دخول",
     menuTitle:"القائمة", mAbout:"من نحن", mWhy:"لماذا جريفن؟", mSvc:"خدمات العملاء", mBrands:"العلامات والأصناف",
     mCust:"تسجيل / بياناتي", mContact:"تواصل معنا", mChannel:"قناة العروض", mTerms:"الشروط والأحكام", mAboutApp:"حول التطبيق", mAdmin:"لوحة المدير", contactTitle:"تواصل معنا", mReturn:"طلب إرجاع بضاعة", returnIntro:"املأ بيانات الإرجاع وسنتواصل معك. تُرفق بياناتك تلقائياً.", returnOrderNo:"رقم الطلب المرجعي (اختياري)", returnItems:"الأصناف المراد إرجاعها *", returnReason:"سبب الإرجاع *", returnNote:"ملاحظات إضافية (اختياري)", returnSend:"إرسال طلب الإرجاع", retAddItem:"إضافة الصنف للقائمة",
     whyEyebrow:"شريكك الموثوق في جيبوتي", whyTitle:"لماذا جريفن أفريقيا؟",
@@ -1608,7 +1653,7 @@ const I18N = {
     svcEyebrow:"À votre service", svcTitle:"Services client",
     updateReady:"Une nouvelle version est disponible", updateNow:"Mettre à jour",
     compatT:"Pour une meilleure expérience et pour commander, ouvrez le lien dans Chrome", compatOpen:"Ouvrir dans Chrome",
-    gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer", payCash:"Comptant", payCredit:"Crédit", day:"j", callForPrice:"Prix sur demande",
+    gateTitle:"Vos informations", gateIntro:"Entrez votre nom et téléphone une fois — enregistrés pour vos prochaines commandes.", gateShop:"Nom du magasin (facultatif)", gateLoc:"Quartier / Rue (facultatif)", gateContinue:"Continuer", payCash:"Comptant", payCredit:"Crédit", day:"j", callForPrice:"Prix sur demande", maintTitle:"Site en maintenance", maintMsg:"Nous améliorons notre catalogue. Nous revenons très bientôt.", maintCodeLbl:"Vous avez un code d'accès ?", maintEnter:"Entrer",
     menuTitle:"Menu", mAbout:"Qui sommes-nous", mWhy:"Pourquoi Griffin ?", mSvc:"Services client", mBrands:"Marques & produits",
     mCust:"Mon compte", mContact:"Contactez-nous", mChannel:"Chaîne des offres", mTerms:"Conditions", mAboutApp:"À propos", mAdmin:"Administration", contactTitle:"Contactez-nous", mReturn:"Demande de retour", returnIntro:"Remplissez les détails du retour, nous vous contacterons.", returnOrderNo:"N° commande réf. (optionnel)", returnItems:"Articles à retourner *", returnReason:"Motif du retour *", returnNote:"Notes (optionnel)", returnSend:"Envoyer la demande", retAddItem:"Ajouter à la liste",
     whyEyebrow:"Votre partenaire de confiance à Djibouti", whyTitle:"Pourquoi Griffin Africa ?",
@@ -1652,7 +1697,7 @@ const I18N = {
     svcEyebrow:"At your service", svcTitle:"Customer Services",
     updateReady:"A new version is available", updateNow:"Update now",
     compatT:"For the best experience and to order, open this link in Chrome", compatOpen:"Open in Chrome",
-    gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue", payCash:"Cash", payCredit:"Credit", day:"d", callForPrice:"Call for price",
+    gateTitle:"Your details", gateIntro:"Enter your name & phone once — saved for all your future orders.", gateShop:"Shop name (optional)", gateLoc:"Area / Street (optional)", gateContinue:"Continue", payCash:"Cash", payCredit:"Credit", day:"d", callForPrice:"Call for price", maintTitle:"Site under maintenance", maintMsg:"We are improving our catalogue. We will be back very soon.", maintCodeLbl:"Have a review code?", maintEnter:"Enter",
     menuTitle:"Menu", mAbout:"About us", mWhy:"Why Griffin?", mSvc:"Customer services", mBrands:"Brands & products",
     mCust:"My account", mContact:"Contact us", mChannel:"Offers channel", mTerms:"Terms", mAboutApp:"About", mAdmin:"Admin", contactTitle:"Contact us", mReturn:"Return request", returnIntro:"Fill in the return details and we will contact you.", returnOrderNo:"Ref order no. (optional)", returnItems:"Items to return *", returnReason:"Return reason *", returnNote:"Notes (optional)", returnSend:"Send return request", retAddItem:"Add item to list",
     whyEyebrow:"Your trusted partner in Djibouti", whyTitle:"Why Griffin Africa?",
@@ -3096,6 +3141,19 @@ function adminSettings(){
   <button class="btn btn-primary btn-sm" onclick="saveChannels()">💾 ${L?"حفظ القنوات":"Save channels"}</button>
 
   <div class="hairline" style="margin:22px 0"></div>
+  <div class="admin-note" style="border-inline-start-color:#C0392B">🔒 ${L?"وضع الصيانة: يحجب الموقع عن العملاء ويُظهر شاشة «قيد التحديث». أنت تدخل دائماً بحسابك، ومن تمنحه رمز المراجعة يدخل أيضاً.":"Maintenance mode hides the site from customers."}</div>
+  <label class="toggle-row" style="margin-bottom:10px"><span>${L?"تفعيل وضع الصيانة (حجب الموقع)":"Enable maintenance mode"}</span>
+    <input type="checkbox" id="mtActive" ${(CONFIG.maintenance||{}).active?"checked":""} onchange="toggleMaintenance(this.checked)"></label>
+  <div class="field"><label>${L?"عنوان الشاشة (اختياري)":"Screen title (optional)"}</label>
+    <input class="inp" id="mtTitleIn" value="${esc((CONFIG.maintenance||{}).title||"")}" placeholder="${L?"الموقع قيد التحديث":"Under maintenance"}"></div>
+  <div class="field"><label>${L?"نص الرسالة (اختياري)":"Message (optional)"}</label>
+    <textarea class="inp" id="mtMsgIn" rows="2" style="height:auto;min-height:56px" placeholder="${L?"نعمل حالياً على تطوير الكتالوج. سنعود قريباً.":"We'll be back soon."}">${esc((CONFIG.maintenance||{}).msg||"")}</textarea></div>
+  <div class="field"><label>🔑 ${L?"رمز المراجعة (امنحه لمن تثق به)":"Review code"}</label>
+    <div class="pw-wrap"><input class="inp pw-inp" id="mtCodeSet" value="${esc((CONFIG.maintenance||{}).code||"")}" placeholder="${L?"اتركه فارغاً لمنع أي دخول":"Blank = block everyone"}"><button type="button" class="pw-eye" onclick="togglePw('mtCodeSet',this)">👁️</button></div>
+    <div class="hint">${L?"من يدخل بهذا الرمز يرى الموقع كاملاً (يُحفظ على جهازه فلا يعيد إدخاله).":"Reviewers with this code see the full site."}</div></div>
+  <button class="btn btn-primary btn-sm" onclick="saveMaintenance()">💾 ${L?"حفظ إعدادات الصيانة":"Save maintenance"}</button>
+
+  <div class="hairline" style="margin:22px 0"></div>
   <div class="field"><label>${L?"رقم النسخة (يظهر في «حول التطبيق»)":"Version (in About)"}</label><input class="inp" id="setAppVer" value="${esc(CONFIG.appVersion||"2.1")}"></div>
   <button class="btn btn-ghost btn-sm" onclick="saveAppVer()">💾 ${L?"حفظ رقم النسخة":"Save version"}</button>
 
@@ -3723,6 +3781,69 @@ function detectCompat(){
     document.getElementById("compatBar").classList.add("show");
   }
 }
+/* ══════════════════════════════════════════════════════════
+   🔒 وضع الصيانة — يحجب الموقع عن العملاء حتى إشعار آخر
+   المدير (بحساب Firebase) ومن يملك رمز المراجعة يدخلون بحرية
+   ══════════════════════════════════════════════════════════ */
+function maintCfg(){ return Object.assign({active:false,title:"",msg:"",code:""},CONFIG.maintenance||{}); }
+function maintBypassOK(){
+  const m=maintCfg();
+  if(!m.code) return false;
+  return DB.get("maintPass","")===m.code;   // رمز محفوظ ومطابق للحالي
+}
+function applyMaintenance(){
+  const sc=document.getElementById("maintScreen"); if(!sc)return;
+  const m=maintCfg();
+  const blocked = m.active && !FB.isOwner() && !maintBypassOK();
+  sc.classList.toggle("show",blocked);
+  document.body.style.overflow=blocked?"hidden":"";
+  if(blocked){
+    const L=lang==="ar", t=T();
+    const set=(id,v)=>{ const e=document.getElementById(id); if(e)e.textContent=v; };
+    set("mtTitle", (m.title||"").trim() || t.maintTitle);
+    set("mtMsg",   (m.msg||"").trim()   || t.maintMsg);
+    set("mtCodeLbl", t.maintCodeLbl);
+    set("mtEnter",   t.maintEnter);
+    set("mtAdminBtn","⚙️ "+t.mAdmin);
+    set("mtFoot", L?"شركة جريفن أفريقيا — فرع جيبوتي":"Griffin Africa Company — Djibouti Branch");
+    // أخفِ حقل الرمز إن لم يضبط المدير رمزاً
+    const box=document.querySelector("#maintScreen .mt-code");
+    if(box) box.style.display=m.code?"":"none";
+  }
+}
+function tryMaintCode(){
+  const el=document.getElementById("mtCodeIn"); if(!el)return;
+  const v=(el.value||"").trim(); const m=maintCfg();
+  if(v && m.code && v===m.code){
+    DB.set("maintPass",v);
+    el.value="";
+    applyMaintenance();
+    toast(lang==="ar"?"مرحباً — تم منحك حق المراجعة ✓":"Access granted ✓","ok");
+  }else{
+    toast(lang==="ar"?"رمز غير صحيح":"Wrong code","err");
+  }
+}
+function maintToAdmin(){
+  // اسمح بالوصول للوحة (تبقى محميّة بالرمز/تسجيل الدخول)
+  document.getElementById("maintScreen").classList.remove("show");
+  document.body.style.overflow="";
+  goAdmin();
+}
+function toggleMaintenance(on){
+  const m=maintCfg(); m.active=!!on; CONFIG.maintenance=m;
+  saveConfig(); schedulePublish(); applyMaintenance();
+  toast(lang==="ar"?(on?"🔒 الموقع محجوب عن العملاء الآن":"✅ الموقع متاح للعملاء"):(on?"Site hidden":"Site live"),"ok");
+}
+function saveMaintenance(){
+  CONFIG.maintenance={
+    active:document.getElementById("mtActive").checked,
+    title:document.getElementById("mtTitleIn").value.trim(),
+    msg:document.getElementById("mtMsgIn").value.trim(),
+    code:document.getElementById("mtCodeSet").value.trim(),
+  };
+  saveConfig(); schedulePublish(); applyMaintenance();
+  toast(lang==="ar"?"حُفظت إعدادات الصيانة ✓":"Maintenance saved ✓","ok");
+}
 function boot(){
   wireLinks();
   bumpStat("visits");
@@ -3730,12 +3851,14 @@ function boot(){
   renderCustBadge();
   detectCompat();
   initSW();   // نظام التحديث الذكي
+  applyMaintenance();   // 🔒 فحص فوري (من الإعداد المحفوظ محلياً)
   // ☁️ تهيئة السحابة: اسحب الكتالوج الحيّ ثم استمع للتحديثات اللحظية
   if(FB.init()){
-    cloudPullCatalog().then(()=>cloudListen());
-    FB.authReady.then(()=>{ flushOfflineQueue(); if(FB.isOwner()){ cloudPullOwnerPin(); cloudListenOwner();
-      if(currentView==="admin"&&!adminUnlocked) renderAdmin();   // كان على شاشة القفل → افتحها له
-    } });
+    cloudPullCatalog().then(()=>{ applyMaintenance(); cloudListen(); });
+    FB.authReady.then(()=>{ flushOfflineQueue(); applyMaintenance();
+      if(FB.isOwner()){ cloudPullOwnerPin(); cloudListenOwner();
+        if(currentView==="admin"&&!adminUnlocked) renderAdmin();   // كان على شاشة القفل → افتحها له
+      } });
   }
   window.addEventListener("scroll",onScroll,{passive:true});
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeLightbox();closeCart();closeCustomer();closeEditor();closeMenu();closeContact();closeTerms();closeAbout();closeGate();closeReturn(); } });
